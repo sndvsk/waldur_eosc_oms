@@ -1,0 +1,11 @@
+/venv
+# Editor artifacts
+/.idea
+# Testing artifacts
+.cache/
+.pytest_cache/
+# documentation
+docs/_build/
+docs/drfapi/
+
+/static
