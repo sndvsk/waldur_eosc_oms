@@ -9,3 +9,5 @@ docs/_build/
 docs/drfapi/
 
 /static
+
+database-devel.sqlite3
