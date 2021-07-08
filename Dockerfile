@@ -5,15 +5,12 @@ FROM ubuntu:20.04
 RUN apt-get update -y && \
     apt-get install -y python3-pip python-dev
 
-# We copy just the requirements.txt first to leverage Docker cache
-COPY requirements/requirements.txt /app/requirements.txt
+COPY . /src/app
 
-WORKDIR /app
+WORKDIR /src/app
 
-RUN pip install -r requirements.txt
+RUN pip install -r requirements/requirements.txt
 
-COPY . /app
+ENTRYPOINT [ "python3" ]
 
-ENTRYPOINT [ "python" ]
-
-CMD [ "app.py" ]
+CMD [ "/src/app/src/app.py" ]
