@@ -7,7 +7,7 @@ from datetime import timedelta
 urllib3.disable_warnings()  # unverified request
 
 now = datetime.now()
-test_time = now - timedelta(hours=8)    # because polling is not working with time that is "now"
+test_time = now - timedelta(hours=12)    # because polling is not working with time that is "now"
 test_time = test_time.isoformat()
 
 
