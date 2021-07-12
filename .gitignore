@@ -5,6 +5,7 @@
 .cache/
 .pytest_cache/
 src/test_files
+src/data.json
 # documentation
 docs/_build/
 docs/drfapi/
