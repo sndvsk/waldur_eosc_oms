@@ -15,9 +15,10 @@ def to_file(filename, json_content):
 
 res = get_events_from_eosc()
 to_file('data.json', res)
-
+# file is created in repository only after stopping the application
 
 # TODO: print result to console
+print("Output:\n", res)
 
 
 @app.route('/')
