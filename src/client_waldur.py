@@ -37,18 +37,11 @@ waldur_client = wc.WaldurClient(waldur_url, TOKEN)
 # created a project with this line in local waldur
 
 
-test_project = waldur_client._get_project("73201e09c2724b4db6634fda8a3f7787")
-test_offering = waldur_client._get_offering("8eea8a6825da45a6bc0342574cdb0a97")
-test_plan = waldur_client._get_plan("f8afe3975cfa4dcc9a199b7ccf7c71bb")
-
-print(test_project)
-print(test_offering)
-print(test_plan)
-
-
-# waldur_client.create_marketplace_order(project=test_project['uuid'], offering=test_offering['uuid'],
-#                                       plan=test_plan['uuid'], attributes=None)
-
+# test_project = waldur_client._get_project("73201e09c2724b4db6634fda8a3f7787")
+# test_offering = waldur_client._get_offering("8eea8a6825da45a6bc0342574cdb0a97")
+# test_plan = waldur_client._get_plan("f8afe3975cfa4dcc9a199b7ccf7c71bb")
+# waldur_client.create_marketplace_order(project=test_project['uuid'], offering=test_offering['uuid'], plan=test_plan['uuid'])
+# created an order with this line in local waldur
 
 # 1.
 def create_organization():
@@ -62,11 +55,16 @@ def create_project(customer_id, name, backend_id):
 
 
 # 3.
-def create_order():
-    return None
+def create_order(project, offering, plan, attributes=None, limits=None):
+    return waldur_client.create_marketplace_order(project=project, offering=offering,
+                                                  plan=plan, attributes=attributes, limits=limits)
 
 
 # 4.
 def create_new_member():
-    # no features in WaldurClient atm
+    # TODO
     return None
+
+
+#create_project("1f8643e30e424c8cbfbb960301c20fb0", "test123", "1111")
+#create_order("73201e09c2724b4db6634fda8a3f7787", "8eea8a6825da45a6bc0342574cdb0a97", "f8afe3975cfa4dcc9a199b7ccf7c71bb")
