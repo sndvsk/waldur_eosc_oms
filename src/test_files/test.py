@@ -14,7 +14,6 @@ test_time = test_time.isoformat()
 my_url = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/api/v1/oms/2/events"  # polling url
 token = os.environ.get('TOKEN')
 
-
 headers = {
     'accept': 'application/json',
     'X-User-Token': token,
@@ -31,8 +30,7 @@ response = requests.get(my_url,
 
 packages_json = response.json()
 
+with open('data.json', 'w', encoding='utf-8') as f:  # data to json file
+    json.dump(packages_json, f, ensure_ascii=False, indent=4)  # file with nice markdown
 
-def to_file(filename):
-    with open(filename, 'w', encoding='utf-8') as f:  # data to json file
-        json.dump(packages_json, f, ensure_ascii=False, indent=4)  # file with nice markdown
-        return str(response.status_code)
+# TODO client_waldur.py testing

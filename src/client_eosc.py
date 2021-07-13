@@ -27,7 +27,6 @@ def get_events_from_eosc(time_delta=timedelta(days=5)):
                             verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
 
     # noinspection PyBroadException
-    # TODO: error handling (try/except block); by default, return [] or None
     try:
         return response.json()
 
