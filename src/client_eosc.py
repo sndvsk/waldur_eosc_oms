@@ -7,7 +7,7 @@ EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/api/v1/oms/2/eve
 TOKEN = os.environ.get('TOKEN')
 
 
-def get_events_from_eosc(time_delta=timedelta(days=5)):
+def get_events_from_eosc(time_delta=timedelta(days=10)):
     now = datetime.now()
     test_time = now - time_delta  # because polling is not working with time that is "now"
     test_time = test_time.isoformat()
