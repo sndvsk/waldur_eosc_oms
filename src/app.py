@@ -3,6 +3,8 @@ import urllib3
 import json
 from client_eosc import get_events_from_eosc
 
+# from client_waldur import create_project
+
 app = Flask(__name__)
 
 urllib3.disable_warnings()  # unverified request
