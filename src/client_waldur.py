@@ -45,8 +45,9 @@ print(test_project)
 print(test_offering)
 print(test_plan)
 
-#waldur_client.create_marketplace_order(project=test_project['uuid'], offering=test_offering['uuid'],
-#                                       plan=test_plan['uuid'])
+
+# waldur_client.create_marketplace_order(project=test_project['uuid'], offering=test_offering['uuid'],
+#                                       plan=test_plan['uuid'], attributes=None)
 
 
 # 1.
