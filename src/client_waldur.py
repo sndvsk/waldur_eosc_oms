@@ -1,5 +1,3 @@
-# TODO README.md integration idea 3. task
-
 # from curl requests in localhost -> developer tools
 # Request method : POST
 # 1.Waldur Organization -> http://localhost/api/customers/
@@ -15,7 +13,7 @@
 
 
 import os
-import waldur_client as wc
+from waldur_client import WaldurClient
 import requests
 
 USERNAME = os.environ.get('USERNAME')
@@ -31,17 +29,8 @@ def get_token():
 
 
 TOKEN = get_token()
-waldur_client = wc.WaldurClient(waldur_url, TOKEN)
+wc = WaldurClient(waldur_url, TOKEN)
 
-
-# waldur_client.create_project("1f8643e30e424c8cbfbb960301c20fb0", "test123", "1111")
-# created a project with this line in local waldur
-# test_project = waldur_client._get_project("73201e09c2724b4db6634fda8a3f7787")
-# test_offering = waldur_client._get_offering("8eea8a6825da45a6bc0342574cdb0a97")
-# test_plan = waldur_client._get_plan("f8afe3975cfa4dcc9a199b7ccf7c71bb")
-# waldur_client.create_marketplace_order(project=test_project['uuid'], offering=test_offering['uuid'],
-# plan=test_plan['uuid'])
-# created an order with this line in local waldur
 
 # 1.
 def create_organization(name, email, address, registration_code,
@@ -55,7 +44,7 @@ def create_organization(name, email, address, registration_code,
     if owners is None:
         owners = []
 
-    return waldur_client.create_customer(name=name, email=email, address=address, registration_code=registration_code,
+    return wc.create_customer(name=name, email=email, address=address, registration_code=registration_code,
                                          backend_id=backend_id, abbreviation=abbreviation, bank_account=bank_account,
                                          bank_name=bank_name, contact_details=contact_details, country=country,
                                          display_name=display_name, domain=domain, homepage=homepage,
@@ -65,13 +54,13 @@ def create_organization(name, email, address, registration_code,
 
 
 # 2.
-def create_project(customer_id, name, backend_id):
-    return waldur_client.create_project(customer_id, name, backend_id)
+def create_project(customer_id, name, backend_id=None):
+    return wc.create_project(customer_id, name, backend_id)
 
 
 # 3.
 def create_order(project, offering, plan, attributes=None, limits=None):
-    return waldur_client.create_marketplace_order(project=project, offering=offering,
+    return wc.create_marketplace_order(project=project, offering=offering,
                                                   plan=plan, attributes=attributes, limits=limits)
 
 
@@ -80,7 +69,3 @@ def create_new_member():
     # TODO
     return None
 
-# create_project("1f8643e30e424c8cbfbb960301c20fb0", "test123", "1111")
-# create_order("73201e09c2724b4db6634fda8a3f7787", "8eea8a6825da45a6bc0342574cdb0a97", "f8afe3975cfa4dcc9a199b7ccf7c71bb")
-# create_organization(name="test_from_ide", email="test@test.com", address="Delta", registration_code="12313",
-#                    backend_id=123)
