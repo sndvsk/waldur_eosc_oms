@@ -6,6 +6,7 @@
 # Testing artifacts
 .cache/
 .pytest_cache/
+src/data
 
 # documentation
 docs/_build/
