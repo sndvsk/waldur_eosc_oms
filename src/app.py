@@ -17,13 +17,19 @@ def to_file(filename, json_content):
 
 
 # to_file('data/event_list.json', ce.get_event_list_from_eosc())
+utils.get_events()
 
 
 @app.route('/sync-projects')
 def sync_projects():
-    print(requests.certs.where())
     utils.sync_projects('data/event_list.json')
     return "The projects were synced"
+
+
+@app.route('/sync-orders')
+def sync_orders():
+    utils.sync_orders('data/event_list.json', project_id=1449)  # hardcoded
+    return "The orders were synced"
 
 
 if __name__ == '__main__':
