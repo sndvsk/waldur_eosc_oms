@@ -1,8 +1,8 @@
 import json
 
+import requests
 from flask import Flask
 import urllib3
-import client_eosc as ce
 import utils as utils
 
 app = Flask(__name__)
@@ -16,11 +16,12 @@ def to_file(filename, json_content):
         f.close()  # create file without closing the program
 
 
-to_file('data/event_list.json', ce.get_event_list_from_eosc())
+# to_file('data/event_list.json', ce.get_event_list_from_eosc())
 
 
 @app.route('/sync-projects')
 def sync_projects():
+    print(requests.certs.where())
     utils.sync_projects('data/event_list.json')
     return "The projects were synced"
 
