@@ -14,9 +14,11 @@ EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
 
+mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
+
+
 # from https://github.com/cyfronet-fid/oms-adapter-jira/blob/dd056e114fcd0f0e1259723c35819f1b9863b331/oms_jira
 # /services/mp.py#L259
-
 EVENT_LIST_URL = "/api/v1/oms/%s/events"
 MESSAGE_LIST_URL = f"/api/v1/oms/{OMS_ID}/messages"
 MESSAGE_URL = f"/api/v1/oms/{OMS_ID}/messages/{{message_id}}"
@@ -43,24 +45,6 @@ def headers_params(time_delta=timedelta(days=20)):
     )
 
     return headers, params
-
-
-def sync_projects(filename):
-    with open(filename, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-        project_id_list = []
-        for event in data['events']:
-            if event['resource'] == 'project':
-                if event['type'] == 'create':
-                    project_data = get_project_from_eosc(event['project_id'])
-                    json.dump(project_data, sys.stdout, indent=2)
-                    create_project(customer_id="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
-                                   name=project_data['attributes']['name'], backend_id=project_data['id'])
-                if event['project_id'] in project_id_list:
-                    pass
-                else:
-                    project_id_list.append(event['project_id'])
-        return project_id_list
 
 
 def get_project_item_id_list(filename, project_id):
@@ -91,86 +75,6 @@ def get_project_item_id_list(filename, project_id):
             return project_item_id_list
 
 
-def get_event_list_from_eosc():
-    headers, params = headers_params()
-
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, EVENT_LIST_URL % OMS_ID),
-                            headers=headers,
-                            params=params,
-                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
-
-    # noinspection PyBroadException
-    try:
-        return response.json()
-
-    except:
-        return None
-
-
-def get_message_list_from_eosc():
-    headers, params = headers_params()
-
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, MESSAGE_LIST_URL),
-                            headers=headers,
-                            params=params,
-                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
-
-    # noinspection PyBroadException
-    try:
-        return response.json()
-
-    except:
-        return None
-
-
-def get_message_from_eosc():
-    headers, params = headers_params()
-
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, MESSAGE_URL),
-                            headers=headers,
-                            params=params,
-                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
-
-    # noinspection PyBroadException
-    try:
-        return response.json()
-
-    except:
-        return None
-
-
-def get_project_item_list_from_eosc():
-    headers, params = headers_params()
-
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, PROJECT_ITEM_LIST_URL),
-                            headers=headers,
-                            params=params,
-                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
-
-    # noinspection PyBroadException
-    try:
-        return response.json()
-
-    except:
-        return None
-
-
-def get_project_item_from_eosc():
-    headers, params = headers_params()
-
-    response = requests.get(urllib.parse.urljoin(EOSC_URL, PROJECT_ITEM_URL),
-                            headers=headers,
-                            params=params,
-                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
-
-    # noinspection PyBroadException
-    try:
-        return response.json()
-
-    except:
-        return None
-
-
 def get_project_from_eosc(project_id):
     headers, params = headers_params()
 
@@ -187,7 +91,87 @@ def get_project_from_eosc(project_id):
         return None
 
 
-def get_oms_list_from_eosc():
+def get_event_list_from_eosc():
+    headers, params = headers_params()
+
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, EVENT_LIST_URL % OMS_ID),
+                            headers=headers,
+                            params=params,
+                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
+
+    # noinspection PyBroadException
+    try:
+        return response.json()
+
+    except:
+        return None
+
+
+def get_message_list_from_eosc():  # TODO
+    headers, params = headers_params()
+
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, MESSAGE_LIST_URL),
+                            headers=headers,
+                            params=params,
+                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
+
+    # noinspection PyBroadException
+    try:
+        return response.json()
+
+    except:
+        return None
+
+
+def get_message_from_eosc():  # TODO
+    headers, params = headers_params()
+
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, MESSAGE_URL),
+                            headers=headers,
+                            params=params,
+                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
+
+    # noinspection PyBroadException
+    try:
+        return response.json()
+
+    except:
+        return None
+
+
+def get_project_item_list_from_eosc():  # TODO
+    headers, params = headers_params()
+
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, PROJECT_ITEM_LIST_URL),
+                            headers=headers,
+                            params=params,
+                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
+
+    # noinspection PyBroadException
+    try:
+        return response.json()
+
+    except:
+        return None
+
+
+def get_project_item_from_eosc():  # TODO
+    headers, params = headers_params()
+
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, PROJECT_ITEM_URL),
+                            headers=headers,
+                            params=params,
+                            verify=False)  # because of _ssl.c:1124 [SSL: CERTIFICATE_VERIFY_FAILED]
+
+    # noinspection PyBroadException
+    try:
+        return response.json()
+
+    except:
+        return None
+
+
+def get_oms_list_from_eosc():  # TODO
     headers, params = headers_params()
 
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OMS_LIST_URL),
@@ -203,7 +187,7 @@ def get_oms_list_from_eosc():
         return None
 
 
-def get_oms_from_eosc():
+def get_oms_from_eosc():  # TODO
     headers, params = headers_params()
 
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OMS_URL),

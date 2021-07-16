@@ -3,6 +3,7 @@ import json
 from flask import Flask
 import urllib3
 import client_eosc as ce
+import utils as utils
 
 app = Flask(__name__)
 
@@ -20,7 +21,7 @@ to_file('data/event_list.json', ce.get_event_list_from_eosc())
 
 @app.route('/sync-projects')
 def sync_projects():
-    ce.sync_projects('data/event_list.json')
+    utils.sync_projects('data/event_list.json')
     return "The projects were synced"
 
 
