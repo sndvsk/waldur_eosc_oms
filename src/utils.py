@@ -67,12 +67,11 @@ def sync_orders(project_id_, project_name):
             if event.type == 'create':
                 order_data = mp.get_project_item(project_id=project_id_,
                                                  project_item_id=event.project_item_id)
-                # project_uuid="73201e09c2724b4db6634fda8a3f7787",  # hardcoded
-                # offering_uuid="8eea8a6825da45a6bc0342574cdb0a97",  # hardcoded
-                # plan_uuid="f8afe3975cfa4dcc9a199b7ccf7c71bb",  # hardcoded
                 wc.create_marketplace_order(project=project_name,
-                                            offering="8eea8a6825da45a6bc0342574cdb0a97",    # hardcoded
+                                            offering="80340a86eb214b709e03db364be6b7a7",
+                                            # hardcoded offering=Nordic Resource 1
                                             plan=None,  # None so it is better for testing
+                                            # plan="f8afe3975cfa4dcc9a199b7ccf7c71bb",  # hardcoded plan
                                             attributes=None,
                                             limits=None)
             if event.type == 'update':
