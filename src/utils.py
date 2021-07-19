@@ -49,6 +49,7 @@ def sync_projects():
                 project_data = mp.get_project(event.project_id)
                 wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
                                   name=project_data.attributes.name, backend_id=project_data.id)
+                sync_orders(project_id_=event.project_id, project_name=project_data.attributes.name)
             if event.type == 'update':
                 # TODO
                 pass
@@ -60,17 +61,20 @@ def sync_projects():
     pass
 
 
-def sync_orders(project_id_):
+def sync_orders(project_id_, project_name):
     for event in get_events():
         if event.resource == 'project_item' and event.project_id == project_id_:
             if event.type == 'create':
                 order_data = mp.get_project_item(project_id=project_id_,
-                                                 project_item_id=1)  # hardcoded
-                wc.marketplace_resource_create_order(project_uuid="73201e09c2724b4db6634fda8a3f7787",  # hardcoded
-                                                     offering_uuid="8eea8a6825da45a6bc0342574cdb0a97",  # hardcoded
-                                                     plan_uuid="f8afe3975cfa4dcc9a199b7ccf7c71bb",  # hardcoded
-                                                     attributes=None,
-                                                     limits=None)  # does not work if attributes are not None
+                                                 project_item_id=event.project_item_id)
+                # project_uuid="73201e09c2724b4db6634fda8a3f7787",  # hardcoded
+                # offering_uuid="8eea8a6825da45a6bc0342574cdb0a97",  # hardcoded
+                # plan_uuid="f8afe3975cfa4dcc9a199b7ccf7c71bb",  # hardcoded
+                wc.create_marketplace_order(project=project_name,
+                                            offering="8eea8a6825da45a6bc0342574cdb0a97",    # hardcoded
+                                            plan=None,  # None so it is better for testing
+                                            attributes=None,
+                                            limits=None)
             if event.type == 'update':
                 # TODO
                 pass
