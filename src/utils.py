@@ -1,5 +1,8 @@
+import urllib
+
 import requests
 import os
+import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
@@ -11,19 +14,21 @@ OMS_ID = os.environ.get('OMS_ID')
 
 USERNAME = os.environ.get('USERNAME')
 PASSWORD = os.environ.get('PASSWORD')
-waldur_url = "http://localhost/api/"
+WALDUR_URL = os.environ.get('WALDUR_URL')
+WALDUR_API = urllib.parse.urljoin(WALDUR_URL, 'api/')
+WALDUR_API_AUTH = urllib.parse.urljoin(WALDUR_URL, 'api-auth/password/')
 
 
 def get_waldur_token():
     WALDUR_AUTH = {'username': USERNAME, 'password': PASSWORD}
-    r = requests.post('http://localhost/api-auth/password/', data=WALDUR_AUTH)
-    content = r.json()
+    re = requests.post(WALDUR_API_AUTH, data=WALDUR_AUTH)
+    content = re.json()
     return content['token']
 
 
 WALDUR_TOKEN = get_waldur_token()
 
-wc = WaldurClient(waldur_url, WALDUR_TOKEN)
+wc = WaldurClient(WALDUR_API, WALDUR_TOKEN)
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
