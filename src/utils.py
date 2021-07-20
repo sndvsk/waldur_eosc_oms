@@ -43,7 +43,13 @@ def get_events():
     return events
 
 
+# TODO
+# if there are old events, that are already created, pass
+# sync_organization(), sync_members()
+
+
 def sync_organization():
+    # TODO
     pass
 
 
@@ -92,3 +98,17 @@ def sync_orders(project_id_, project_name):
                 pass
             else:
                 pass
+
+
+def sync_members():
+    # TODO
+    pass
+
+
+def check_project_existence(project_id):
+    pass
+
+
+def check_order_existence(project_id, project_item_id):
+    pass
+
