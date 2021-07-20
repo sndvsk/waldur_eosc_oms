@@ -53,8 +53,10 @@ def sync_projects():
             if event.type == 'create':
                 project_data = mp.get_project(event.project_id)
                 wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
-                                  name=project_data.attributes.name, backend_id=project_data.id)
-                sync_orders(project_id_=event.project_id, project_name=project_data.attributes.name)
+                                  name=project_data.attributes.name,
+                                  backend_id=project_data.id)
+                sync_orders(project_id_=event.project_id,
+                            project_name=project_data.attributes.name)
             if event.type == 'update':
                 # TODO
                 pass
@@ -73,11 +75,14 @@ def sync_orders(project_id_, project_name):
                 order_data = mp.get_project_item(project_id=project_id_,
                                                  project_item_id=event.project_item_id)
                 wc.create_marketplace_order(project=project_name,
-                                            offering="80340a86eb214b709e03db364be6b7a7",
-                                            # hardcoded offering=Nordic Resource 1
-                                            plan=None,  # None so it is better for testing
-                                            # plan="f8afe3975cfa4dcc9a199b7ccf7c71bb",  # hardcoded plan
-                                            attributes=None,
+                                            offering=wc._get_offering(order_data.attributes.service,
+                                                                      project_name)['uuid'],
+                                            # offering name must match with waldur offering
+                                            plan=wc._get_offering(order_data.attributes.service,
+                                                                  project_name)['plans'][0]['uuid'],
+                                            # 0 is index of the plan
+                                            attributes=wc._get_offering(order_data.attributes.service,
+                                                                        project_name)['attributes'],
                                             limits=None)
             if event.type == 'update':
                 # TODO
