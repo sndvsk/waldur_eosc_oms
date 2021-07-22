@@ -79,7 +79,7 @@ def sync_customer(project_id):
 def sync_projects():
     for event in get_events():
         if event.resource == 'project':
-            # sync_customer(project_id=event.project_id)
+            sync_customer(project_id=event.project_id)
             if event.type == 'create':
                 project_data = mp.get_project(event.project_id)
                 wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
@@ -92,7 +92,7 @@ def sync_projects():
                 pass
             if event.type == 'delete':
                 # TODO
-                # wc.delete_project(project=event.project_id)
+                wc.delete_project(project=event.project_id)
                 pass
             else:
                 pass
