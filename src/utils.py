@@ -1,5 +1,3 @@
-import urllib
-
 import requests
 import os
 import pycountry
@@ -46,27 +44,26 @@ def get_events():
 
 
 # TODO
-# if there are old events, that are already created, pass
-# sync_organization(), sync_members()
+# sync_members()
 
 
 def sync_customer(project_id):
     project_data = mp.get_project(project_id=project_id)
-    # TODO: check if organization already exists
-    # if project_data.attributes.organization in wc.list_customers(name=project_data.attributes.organization):
-    #     print("This organization already exists.")
-    # else:
-    return wc.create_customer(name=project_data.attributes.organization,
-                              email=project_data.owner.email,
-                              address="Narva mnt 18",
-                              registration_code=123,
-                              backend_id=project_data.attributes.organization,
-                              contact_details=project_data.attributes.organization,
-                              country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
-                              domain=project_data.attributes.department_webpage,
-                              homepage=project_data.attributes.department_webpage,
-                              native_name=project_data.owner.name,
-                              )
+    for customer in wc.list_customers():
+        if project_data.attributes.organization == customer['name']:
+            return customer  # data of existing customer
+    else:
+        return wc.create_customer(name=project_data.attributes.organization,  # data of a new customer
+                                  email=project_data.owner.email,
+                                  address="Narva mnt 18",
+                                  registration_code=123,
+                                  backend_id=project_data.attributes.organization,
+                                  contact_details=project_data.attributes.organization,
+                                  country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
+                                  domain=project_data.attributes.department_webpage,
+                                  homepage=project_data.attributes.department_webpage,
+                                  native_name=project_data.owner.name,
+                                  )
 
 
 def sync_projects():
@@ -120,16 +117,4 @@ def sync_orders(project_id_, project_name):
 
 def sync_members():
     # TODO
-    pass
-
-
-def check_project_existence(project_id):
-    pass
-
-
-def check_order_existence(project_id, project_item_id):
-    pass
-
-
-def check_customer_existence(customer_id):
     pass
