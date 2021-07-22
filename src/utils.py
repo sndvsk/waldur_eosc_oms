@@ -2,6 +2,7 @@ import urllib
 
 import requests
 import os
+import pycountry
 import urllib.parse
 from datetime import datetime
 from datetime import timedelta
@@ -53,25 +54,17 @@ def sync_customer(project_id):
     project_data = mp.get_project(project_id=project_id)
     wc.create_customer(name=project_data.attributes.name,
                        email=project_data.owner.email,
-                       address=None,
-                       registration_code=None,
-                       backend_id=None,
-                       abbreviation=None,
-                       bank_account=None,
-                       bank_name=None,
+                       address="Narva mnt 18",
+                       registration_code=123,
+                       backend_id=project_data.id,
                        contact_details=project_data.attributes.organization,
-                       country=project_data.attributes.country,
+                       country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
                        display_name=project_data.attributes.name,
-                       domain=project_data.attributes.scientific_domains[0],
+                       domain=project_data.attributes.department_webpage,
                        homepage=project_data.attributes.department_webpage,
                        native_name=project_data.owner.name,
-                       latitude=None,
-                       longitude=None,
-                       owners=project_data.owner,
-                       phone_number=None,
-                       postal=None,
-                       support_users=None,
-                       vat_code=None)
+                       owners=list(project_data.owner),
+                       )
     # TODO
     pass
 
@@ -79,9 +72,9 @@ def sync_customer(project_id):
 def sync_projects():
     for event in get_events():
         if event.resource == 'project':
+            project_data = mp.get_project(event.project_id)
             sync_customer(project_id=event.project_id)
             if event.type == 'create':
-                project_data = mp.get_project(event.project_id)
                 wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
                                   name=project_data.attributes.name,
                                   backend_id=project_data.id)
