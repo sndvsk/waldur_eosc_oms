@@ -52,30 +52,30 @@ def get_events():
 
 def sync_customer(project_id):
     project_data = mp.get_project(project_id=project_id)
-    wc.create_customer(name=project_data.attributes.name,
-                       email=project_data.owner.email,
-                       address="Narva mnt 18",
-                       registration_code=123,
-                       backend_id=project_data.id,
-                       contact_details=project_data.attributes.organization,
-                       country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
-                       display_name=project_data.attributes.name,
-                       domain=project_data.attributes.department_webpage,
-                       homepage=project_data.attributes.department_webpage,
-                       native_name=project_data.owner.name,
-                       owners=list(project_data.owner),
-                       )
-    # TODO
-    pass
+    # TODO: check if organization already exists
+    # if project_data.attributes.organization in wc.list_customers(name=project_data.attributes.organization):
+    #     print("This organization already exists.")
+    # else:
+    return wc.create_customer(name=project_data.attributes.organization,
+                              email=project_data.owner.email,
+                              address="Narva mnt 18",
+                              registration_code=123,
+                              backend_id=project_data.attributes.organization,
+                              contact_details=project_data.attributes.organization,
+                              country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
+                              domain=project_data.attributes.department_webpage,
+                              homepage=project_data.attributes.department_webpage,
+                              native_name=project_data.owner.name,
+                              )
 
 
 def sync_projects():
     for event in get_events():
         if event.resource == 'project':
             project_data = mp.get_project(event.project_id)
-            sync_customer(project_id=event.project_id)
+            customer_data = sync_customer(project_id=event.project_id)
             if event.type == 'create':
-                wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
+                wc.create_project(customer_uuid=customer_data['uuid'],  # hardcoded uuid
                                   name=project_data.attributes.name,
                                   backend_id=project_data.id)
                 sync_orders(project_id_=event.project_id,
@@ -133,5 +133,3 @@ def check_order_existence(project_id, project_item_id):
 
 def check_customer_existence(customer_id):
     pass
-
-
