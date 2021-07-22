@@ -9,6 +9,7 @@ from oms_jira import MPClient
 from waldur_client import WaldurClient
 
 EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
+# BETA_URL = "https://beta.marketplace.eosc-portal.eu/"
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
 
@@ -48,7 +49,29 @@ def get_events():
 # sync_organization(), sync_members()
 
 
-def sync_organization():
+def sync_customer(project_id):
+    project_data = mp.get_project(project_id=project_id)
+    wc.create_customer(name=project_data.attributes.name,
+                       email=project_data.owner.email,
+                       address=None,
+                       registration_code=None,
+                       backend_id=None,
+                       abbreviation=None,
+                       bank_account=None,
+                       bank_name=None,
+                       contact_details=project_data.attributes.organization,
+                       country=project_data.attributes.country,
+                       display_name=project_data.attributes.name,
+                       domain=project_data.attributes.scientific_domains[0],
+                       homepage=project_data.attributes.department_webpage,
+                       native_name=project_data.owner.name,
+                       latitude=None,
+                       longitude=None,
+                       owners=project_data.owner,
+                       phone_number=None,
+                       postal=None,
+                       support_users=None,
+                       vat_code=None)
     # TODO
     pass
 
@@ -56,6 +79,7 @@ def sync_organization():
 def sync_projects():
     for event in get_events():
         if event.resource == 'project':
+            # sync_customer(project_id=event.project_id)
             if event.type == 'create':
                 project_data = mp.get_project(event.project_id)
                 wc.create_project(customer_uuid="1f8643e30e424c8cbfbb960301c20fb0",  # hardcoded uuid
@@ -68,6 +92,7 @@ def sync_projects():
                 pass
             if event.type == 'delete':
                 # TODO
+                # wc.delete_project(project=event.project_id)
                 pass
             else:
                 pass
@@ -111,4 +136,9 @@ def check_project_existence(project_id):
 
 def check_order_existence(project_id, project_item_id):
     pass
+
+
+def check_customer_existence(customer_id):
+    pass
+
 
