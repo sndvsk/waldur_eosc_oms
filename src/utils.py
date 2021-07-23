@@ -8,7 +8,6 @@ from oms_jira import MPClient
 from waldur_client import WaldurClient
 
 EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
-# BETA_URL = "https://beta.marketplace.eosc-portal.eu/"
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
 
@@ -47,23 +46,45 @@ def get_events():
 # sync_members()
 
 
+def check_project(project_data):
+    # project_filter = wc.list_projects({'name': wc._get_project(project_data.attributes.name)['name']})
+    # if len(wc.list_projects()) == 0:
+    #     pass
+    # else:
+    #     for project in project_filter:
+    #         if project_data.attributes.name == project['name']:
+    #             return False
+    #     else:
+    #         return True
+    if len(wc.list_projects()) == 0:
+        pass
+    else:
+        for project in wc.list_projects():
+            if project['uuid'] == wc._get_project(project_data.attributes.name)['uuid']:
+                return False
+            else:
+                return True
+
+
 def sync_customer(project_id):
     project_data = mp.get_project(project_id=project_id)
-    for customer in wc.list_customers():
-        if project_data.attributes.organization == customer['name']:
-            return customer  # data of existing customer
+    customers_filter = wc.list_customers({'name': project_data.attributes.organization})
+    if len(customers_filter) == 0:
+        pass    # no customer with this name
     else:
-        return wc.create_customer(name=project_data.attributes.organization,  # data of a new customer
-                                  email=project_data.owner.email,
-                                  address="Narva mnt 18",
-                                  registration_code=123,
-                                  backend_id=project_data.attributes.organization,
-                                  contact_details=project_data.attributes.organization,
-                                  country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
-                                  domain=project_data.attributes.department_webpage,
-                                  homepage=project_data.attributes.department_webpage,
-                                  native_name=project_data.owner.name,
-                                  )
+        return customers_filter[0]  # data of existing customer with this name
+
+    return wc.create_customer(name=project_data.attributes.organization,  # data of a new customer
+                              email=project_data.owner.email,
+                              address="Narva mnt 18",
+                              registration_code=123,
+                              backend_id=project_data.attributes.organization,
+                              contact_details=project_data.attributes.organization,
+                              country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
+                              domain=project_data.attributes.department_webpage,
+                              homepage=project_data.attributes.department_webpage,
+                              native_name=project_data.owner.name,
+                              )
 
 
 def sync_projects():
@@ -72,28 +93,33 @@ def sync_projects():
             project_data = mp.get_project(event.project_id)
             customer_data = sync_customer(project_id=event.project_id)
             if event.type == 'create':
-                wc.create_project(customer_uuid=customer_data['uuid'],  # hardcoded uuid
-                                  name=project_data.attributes.name,
-                                  backend_id=project_data.id)
-                sync_orders(project_id_=event.project_id,
-                            project_name=project_data.attributes.name)
+                # TODO check if project already exists
+                if check_project(project_data) is True:
+                    continue
+                else:
+                    wc.create_project(customer_uuid=customer_data['uuid'],
+                                      name=project_data.attributes.name,
+                                      backend_id=project_data.id)
+                    sync_orders(project_id=event.project_id,
+                                project_name=project_data.attributes.name)
             if event.type == 'update':
                 # TODO
                 pass
             if event.type == 'delete':
                 # TODO
-                wc.delete_project(project=event.project_id)
+                # there are no such events atm
+                # wc.delete_project(project=wc.list_projects({'backend_id': str(event.project_id)})[0]['backend_id])
                 pass
             else:
                 pass
     pass
 
 
-def sync_orders(project_id_, project_name):
+def sync_orders(project_id, project_name):
     for event in get_events():
-        if event.resource == 'project_item' and event.project_id == project_id_:
+        if event.resource == 'project_item' and event.project_id == project_id:
             if event.type == 'create':
-                order_data = mp.get_project_item(project_id=project_id_,
+                order_data = mp.get_project_item(project_id=project_id,
                                                  project_item_id=event.project_item_id)
                 wc.create_marketplace_order(project=project_name,
                                             offering=wc._get_offering(order_data.attributes.service,
