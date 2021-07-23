@@ -42,48 +42,28 @@ def get_events():
     return events
 
 
-# TODO
-# sync_members()
-
-
-def check_project(project_data):
-    # project_filter = wc.list_projects({'name': wc._get_project(project_data.attributes.name)['name']})
-    # if len(wc.list_projects()) == 0:
-    #     pass
-    # else:
-    #     for project in project_filter:
-    #         if project_data.attributes.name == project['name']:
-    #             return False
-    #     else:
-    #         return True
-    if len(wc.list_projects()) == 0:
-        pass
+def get_or_create_project(project_data, customer_data):
+    project_filter_list = wc.list_projects({'backend_id': str(project_data.id)})
+    if len(project_filter_list) == 0:
+        return wc.create_project(customer_uuid=customer_data['uuid'],
+                                 name=project_data.attributes.name,
+                                 backend_id=str(project_data.id))
     else:
-        for project in wc.list_projects():
-            if project['uuid'] == wc._get_project(project_data.attributes.name)['uuid']:
-                return False
-            else:
-                return True
+        return project_filter_list[0]
 
 
-def sync_customer(project_id):
-    project_data = mp.get_project(project_id=project_id)
-    customers_filter = wc.list_customers({'name': project_data.attributes.organization})
-    if len(customers_filter) == 0:
-        pass    # no customer with this name
-    else:
-        return customers_filter[0]  # data of existing customer with this name
+def get_or_create_customer_for_project(project_data):
+    customers_filter_list = wc.list_customers({'name_exact': project_data.attributes.organization})
+    if len(customers_filter_list) != 0:
+        return customers_filter_list[0]  # data of existing customer with this name
 
     return wc.create_customer(name=project_data.attributes.organization,  # data of a new customer
                               email=project_data.owner.email,
-                              address="Narva mnt 18",
-                              registration_code=123,
                               backend_id=project_data.attributes.organization,
-                              contact_details=project_data.attributes.organization,
                               country=pycountry.countries.get(name=project_data.attributes.country).alpha_2,
                               domain=project_data.attributes.department_webpage,
                               homepage=project_data.attributes.department_webpage,
-                              native_name=project_data.owner.name,
+                              native_name=project_data.attributes.organization,
                               )
 
 
@@ -91,17 +71,10 @@ def sync_projects():
     for event in get_events():
         if event.resource == 'project':
             project_data = mp.get_project(event.project_id)
-            customer_data = sync_customer(project_id=event.project_id)
+            customer_data = get_or_create_customer_for_project(project_data=project_data)
             if event.type == 'create':
-                # TODO check if project already exists
-                if check_project(project_data) is True:
-                    continue
-                else:
-                    wc.create_project(customer_uuid=customer_data['uuid'],
-                                      name=project_data.attributes.name,
-                                      backend_id=project_data.id)
-                    sync_orders(project_id=event.project_id,
-                                project_name=project_data.attributes.name)
+                get_or_create_project(project_data=project_data,
+                                      customer_data=customer_data)
             if event.type == 'update':
                 # TODO
                 pass
@@ -115,21 +88,23 @@ def sync_projects():
     pass
 
 
-def sync_orders(project_id, project_name):
+# TODO
+def sync_orders():
     for event in get_events():
-        if event.resource == 'project_item' and event.project_id == project_id:
+        if event.resource == 'project_item':
+            project_id = event.project_id
+            project_data = mp.get_project(event.project_id)
+            customer_data = get_or_create_customer_for_project(project_data=project_data)
             if event.type == 'create':
-                order_data = mp.get_project_item(project_id=project_id,
-                                                 project_item_id=event.project_item_id)
-                wc.create_marketplace_order(project=project_name,
-                                            offering=wc._get_offering(order_data.attributes.service,
-                                                                      project_name)['uuid'],
+                offering_data = wc._get_offering(offering="3a878cee7bb749d0bb258d7b8442cb64")  # hardcoded
+                project_data_for_order = get_or_create_project(project_data=project_data,
+                                                     customer_data=customer_data)
+                wc.create_marketplace_order(project=project_data_for_order['uuid'],
+                                            offering=offering_data['uuid'],
                                             # offering name must match with waldur offering
-                                            plan=wc._get_offering(order_data.attributes.service,
-                                                                  project_name)['plans'][0]['uuid'],
+                                            plan=offering_data['plans'][0]['uuid'],
                                             # 0 is index of the plan
-                                            attributes=wc._get_offering(order_data.attributes.service,
-                                                                        project_name)['attributes'],
+                                            attributes=offering_data['attributes'],
                                             limits=None)
             if event.type == 'update':
                 # TODO
@@ -141,6 +116,7 @@ def sync_orders(project_id, project_name):
                 pass
 
 
+# TODO
 def sync_members():
     # TODO
     pass
