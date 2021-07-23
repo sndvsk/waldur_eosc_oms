@@ -92,7 +92,6 @@ def sync_projects():
 def sync_orders():
     for event in get_events():
         if event.resource == 'project_item':
-            project_id = event.project_id
             project_data = mp.get_project(event.project_id)
             customer_data = get_or_create_customer_for_project(project_data=project_data)
             if event.type == 'create':
