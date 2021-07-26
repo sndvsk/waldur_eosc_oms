@@ -97,7 +97,7 @@ def sync_orders():
             if event.type == 'create':
                 offering_data = wc._get_offering(offering="3a878cee7bb749d0bb258d7b8442cb64")  # hardcoded
                 project_data_for_order = get_or_create_project(project_data=project_data,
-                                                     customer_data=customer_data)
+                                                               customer_data=customer_data)
                 wc.create_marketplace_order(project=project_data_for_order['uuid'],
                                             offering=offering_data['uuid'],
                                             # offering name must match with waldur offering
