@@ -5,6 +5,7 @@ import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
+from oms_jira.services.mp import MPMessage, ScopeEnum
 from waldur_client import WaldurClient
 
 EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
@@ -42,14 +43,47 @@ def get_events():
     return events
 
 
+def post_message(project_item_data, order_data):
+    content = "Order was created"
+    mp.create_message(message=MPMessage(project_id=project_item_data.project_id,
+                                        project_item_id=project_item_data.id,
+                                        author=order_data['created_by_full_name'],
+                                        content=content,
+                                        scope=ScopeEnum.public))
+    print('Message was posted.')
+
+
+def get_or_create_order(offering_data, project_data_for_order, project_item_data):
+    order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
+    if len(order_filter_list) != 0:
+        return order_filter_list[0]
+
+    order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
+                                             offering=offering_data['uuid'],
+                                             # offering name must match with waldur offering
+                                             plan=offering_data['plans'][0]['uuid'],
+                                             # 0 is index of the plan
+                                             attributes=offering_data['attributes'],
+                                             limits=None)
+
+    post_message(project_item_data=project_item_data,
+                 order_data=order_data)
+
+    return order_data
+
+
+def get_or_create_order_item():
+    pass
+
+
 def get_or_create_project(project_data, customer_data):
     project_filter_list = wc.list_projects({'backend_id': str(project_data.id)})
-    if len(project_filter_list) == 0:
-        return wc.create_project(customer_uuid=customer_data['uuid'],
-                                 name=project_data.attributes.name,
-                                 backend_id=str(project_data.id))
-    else:
+    if len(project_filter_list) != 0:
         return project_filter_list[0]
+
+    return wc.create_project(customer_uuid=customer_data['uuid'],
+                             name=project_data.attributes.name,
+                             backend_id=str(project_data.id))
 
 
 def get_or_create_customer_for_project(project_data):
@@ -98,13 +132,10 @@ def sync_orders():
                 offering_data = wc._get_offering(offering="3a878cee7bb749d0bb258d7b8442cb64")  # hardcoded
                 project_data_for_order = get_or_create_project(project_data=project_data,
                                                                customer_data=customer_data)
-                wc.create_marketplace_order(project=project_data_for_order['uuid'],
-                                            offering=offering_data['uuid'],
-                                            # offering name must match with waldur offering
-                                            plan=offering_data['plans'][0]['uuid'],
-                                            # 0 is index of the plan
-                                            attributes=offering_data['attributes'],
-                                            limits=None)
+                project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
+                get_or_create_order(offering_data=offering_data,
+                                    project_data_for_order=project_data_for_order,
+                                    project_item_data=project_item_data)
             if event.type == 'update':
                 # TODO
                 pass
