@@ -5,7 +5,7 @@ import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
-from oms_jira.services.mp import MPMessage, ScopeEnum, ProjectItemStatusEnum, MessageAuthor
+from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor
 from waldur_client import WaldurClient
 
 EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
