@@ -54,8 +54,8 @@ def post_message(project_item_data, content):
                     content=str(content),
                     scope=ScopeEnum.public)
 
-    return mp.create_message(message=msg)
-    # return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
+    # return mp.create_message(message=msg)
+    return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
 
 
 def patch_project_item(order_data):
