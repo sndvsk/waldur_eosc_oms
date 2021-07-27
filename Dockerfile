@@ -5,12 +5,12 @@ FROM ubuntu:20.04
 RUN apt-get update -y && \
     apt-get install -y python3-pip python-dev
 
-COPY . /src/app
+COPY . /src
 
-WORKDIR /src/app
+WORKDIR /src
 
 RUN pip install -r requirements/requirements.txt
 
 ENTRYPOINT [ "python3" ]
 
-CMD [ "/src/app/src/app.py" ]
+CMD [ "/src/app.py" ]

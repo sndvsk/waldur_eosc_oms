@@ -5,7 +5,7 @@ import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
-from oms_jira.services.mp import MPMessage, ScopeEnum
+from oms_jira.services.mp import MPMessage, ScopeEnum, ProjectItemStatusEnum, MessageAuthor
 from waldur_client import WaldurClient
 
 EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
@@ -43,19 +43,42 @@ def get_events():
     return events
 
 
-def post_message(project_item_data, order_data):
-    content = "Order was created"
-    mp.create_message(message=MPMessage(project_id=project_item_data.project_id,
-                                        project_item_id=project_item_data.id,
-                                        author=order_data['created_by_full_name'],
-                                        content=content,
-                                        scope=ScopeEnum.public))
-    print('Message was posted.')
+def post_message(project_item_data, content):
+    msg_author = MessageAuthor(email="sander.veske@gmail.com",
+                               name="Test Admin",
+                               role="provider")
+
+    msg = MPMessage(project_id=project_item_data.project_id,
+                    project_item_id=project_item_data.id,
+                    author=msg_author,
+                    content=str(content),
+                    scope=ScopeEnum.public)
+
+    # return mp.create_message(message=MPMsg)
+    return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
+
+
+def patch_project_item(order_data):
+    # mp.update_project_item(project_id=order_data.project_id,
+    #                        project_item_id=order_data.project_item_id,
+    #                        status=ProjectItemStatusEnum(value="string",
+    #                                                     type="approved",
+    #                                                     ),
+    #                        )
+    mp.patch(mp.endpoint.project_item.format(
+        project_id=order_data.project_id, project_item_id=order_data.project_item_id), verify=False,
+        data={"status": {"value": "registered",
+                         "type": "approved"},
+              "user_secrets": {"access credentials": str(WALDUR_TOKEN)}
+              },
+    )
 
 
 def get_or_create_order(offering_data, project_data_for_order, project_item_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
+        # testing for 101 line
+        # patch_project_item(order_data=order_filter_list[0])
         return order_filter_list[0]
 
     order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
@@ -66,9 +89,15 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
                                              attributes=offering_data['attributes'],
                                              limits=None)
 
-    post_message(project_item_data=project_item_data,
-                 order_data=order_data)
+    content = "Your request has been successfully processed. Please login to", str(WALDUR_URL), "to get access to " \
+                                                                                                "your resource. " \
+                                                                                                "Invitation has been " \
+                                                                                                "sent to your email. "
 
+    post_message(project_item_data=project_item_data,
+                 content=content)
+    # TODO
+    # patch_project_item(order_data=order_data)
     return order_data
 
 
