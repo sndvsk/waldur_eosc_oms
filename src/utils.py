@@ -54,8 +54,8 @@ def post_message(project_item_data, content):
                     content=str(content),
                     scope=ScopeEnum.public)
 
-    # return mp.create_message(message=MPMsg)
-    return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
+    return mp.create_message(message=msg)
+    # return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
 
 
 def patch_project_item(order_data):
@@ -77,6 +77,12 @@ def patch_project_item(order_data):
 def get_or_create_order(offering_data, project_data_for_order, project_item_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
+        content = "Your request has been successfully processed." \
+                  "Please login to" + str(WALDUR_URL) + "to get access to your resource. " \
+                                                        "Invitation has been sent to your email. "
+
+        post_message(project_item_data=project_item_data,
+                     content=content)
         # testing for 101 line
         # patch_project_item(order_data=order_filter_list[0])
         return order_filter_list[0]
