@@ -44,7 +44,7 @@ def get_events():
 
 
 def post_message(project_item_data, content):
-    msg_author = MessageAuthor(email="sander.veske@gmail.com",
+    msg_author = MessageAuthor(email="ewww1sh@gmail.com",
                                name="Test Admin",
                                role="provider")
 
