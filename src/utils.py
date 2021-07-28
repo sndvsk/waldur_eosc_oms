@@ -77,12 +77,6 @@ def patch_project_item(order_data):
 def get_or_create_order(offering_data, project_data_for_order, project_item_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
-        content = "Your request has been successfully processed." \
-                  "Please login to" + str(WALDUR_URL) + "to get access to your resource. " \
-                                                        "Invitation has been sent to your email. "
-
-        post_message(project_item_data=project_item_data,
-                     content=content)
         # testing for 101 line
         # patch_project_item(order_data=order_filter_list[0])
         return order_filter_list[0]
@@ -95,10 +89,9 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
                                              attributes=offering_data['attributes'],
                                              limits=None)
 
-    content = "Your request has been successfully processed. Please login to", str(WALDUR_URL), "to get access to " \
-                                                                                                "your resource. " \
-                                                                                                "Invitation has been " \
-                                                                                                "sent to your email. "
+    content = "Your request has been successfully processed. " \
+              "Please login to " + str(WALDUR_URL) + " to get access to your resource. " \
+                                                     "Invitation has been sent to your email. "
 
     post_message(project_item_data=project_item_data,
                  content=content)
