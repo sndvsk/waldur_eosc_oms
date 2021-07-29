@@ -1,11 +1,7 @@
 from flask import Flask
-import urllib3
 import utils as utils
 
 app = Flask(__name__)
-
-urllib3.disable_warnings()  # unverified request
-
 
 utils.get_events()
 

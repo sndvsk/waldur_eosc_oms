@@ -8,7 +8,7 @@ from oms_jira import MPClient
 from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor
 from waldur_client import WaldurClient
 
-EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
+EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
 
@@ -44,7 +44,7 @@ def get_events():
 
 
 def post_message(project_item_data, content):
-    msg_author = MessageAuthor(email="ewww1sh@gmail.com",
+    msg_author = MessageAuthor(email="test@example.com",
                                name="Test Admin",
                                role="provider")
 
@@ -77,21 +77,19 @@ def patch_project_item(order_data):
 def get_or_create_order(offering_data, project_data_for_order, project_item_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
-        # testing for 101 line
         # patch_project_item(order_data=order_filter_list[0])
         return order_filter_list[0]
 
     order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
                                              offering=offering_data['uuid'],
-                                             # offering name must match with waldur offering
                                              plan=offering_data['plans'][0]['uuid'],
-                                             # 0 is index of the plan
                                              attributes=offering_data['attributes'],
                                              limits=None)
 
+    wal_url = str(WALDUR_URL)
     content = "Your request has been successfully processed. " \
-              "Please login to " + str(WALDUR_URL) + " to get access to your resource. " \
-                                                     "Invitation has been sent to your email. "
+              f"Please login to {wal_url} to get access to your resource. " \
+              "Invitation has been sent to your email. "
 
     post_message(project_item_data=project_item_data,
                  content=content)

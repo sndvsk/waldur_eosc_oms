@@ -1,12 +1,10 @@
 FROM python:3.9.6-buster
 
-#MAINTANER Your Name "youremail@domain.tld"
-
 RUN apt-get update -y && \
     pip install pipenv && \
     git clone https://github.com/cyfronet-fid/oms-adapter-jira.git && \
     cd oms-adapter-jira && \
-    pipenv install --dev
+    pipenv install --system
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"

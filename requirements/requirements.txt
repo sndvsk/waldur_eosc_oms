@@ -12,5 +12,6 @@ Werkzeug==1.0.1
 WTForms==2.2.1
 git+git://github.com/opennode/ansible-waldur-module@develop
 pycountry==20.7.3
-urlib3==1.26.6
 requests==2.26.0
+flask_restx==0.5.0
+
