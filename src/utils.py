@@ -69,30 +69,25 @@ def patch_project_item(project_item_data, event_data):
         project_id=project_item_data.project_id, project_item_id=project_item_data.id), verify=False,
         data={"status": {"value": "registered",
                          "type": "registered"},
-              # "user_secrets": {"access credentials": "TEST"}
-              # {"access credentials": WALDUR_TOKEN}
+              # "user_secrets": {"access credentials": WALDUR_TOKEN}
               },
     )
 
 
 def update_project_item(project_item_data, event_data):
     for change in event_data.changes:
-        if change.after == 'string':  # for testing purposes because of invalid test input in eosc mp
+        if change.before or change.after == '<OBFUSCATED>':
+            # for testing purposes because of invalid test input in eosc mp
             pass
         else:
-            if change.before or change.after == '<OBFUSCATED>':
-                # for testing purposes because of invalid test input in eosc mp
-                pass
-            else:
-                mp.update_project_item(project_id=project_item_data.project_id,
-                                       project_item_id=project_item_data.id,
-                                       status=ProjectItemStatusEnum(change.after))
+            mp.update_project_item(project_id=project_item_data.project_id,
+                                   project_item_id=project_item_data.id,
+                                   status=ProjectItemStatusEnum(change.after))
 
 
 def get_or_create_order(offering_data, project_data_for_order, project_item_data, event_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
-        # patch_project_item(project_item_data=project_item_data, event_data=event_data)
         return order_filter_list[0]
 
     order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
@@ -107,7 +102,7 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
 
     post_message(project_item_data=project_item_data,
                  content=content)
-    # TODO
+
     patch_project_item(project_item_data=project_item_data, event_data=event_data)
     return order_data
 
