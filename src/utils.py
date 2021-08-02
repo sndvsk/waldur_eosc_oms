@@ -86,9 +86,8 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
                                              attributes=offering_data['attributes'],
                                              limits=None)
 
-    wal_url = str(WALDUR_URL)
     content = "Your request has been successfully processed. " \
-              f"Please login to {wal_url} to get access to your resource. " \
+              f"Please login to {WALDUR_URL} to get access to your resource. " \
               "Invitation has been sent to your email. "
 
     post_message(project_item_data=project_item_data,
