@@ -1,11 +1,12 @@
 import requests
 import os
 import pycountry
+import logging
 import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
-from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor
+from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor, ProjectItemStatusEnum
 from waldur_client import WaldurClient
 
 EOSC_URL = os.environ.get('EOSC_URL')  # polling url
@@ -58,26 +59,40 @@ def post_message(project_item_data, content):
     return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
 
 
-def patch_project_item(order_data):
-    # mp.update_project_item(project_id=order_data.project_id,
-    #                        project_item_id=order_data.project_item_id,
-    #                        status=ProjectItemStatusEnum(value="string",
-    #                                                     type="approved",
-    #                                                     ),
-    #                        )
+def patch_project_item(project_item_data, event_data):
+    # for change in event_data.changes:
+    #     mp.update_project_item(project_id=project_item_data.project_id,
+    #                            project_item_id=project_item_data.project_item_id,
+    #                            status=ProjectItemStatusEnum(ProjectItemStatusEnum(change.after)),
+    #                            )
     mp.patch(mp.endpoint.project_item.format(
-        project_id=order_data.project_id, project_item_id=order_data.project_item_id), verify=False,
+        project_id=project_item_data.project_id, project_item_id=project_item_data.id), verify=False,
         data={"status": {"value": "registered",
-                         "type": "approved"},
-              "user_secrets": {"access credentials": str(WALDUR_TOKEN)}
+                         "type": "registered"},
+              # "user_secrets": {"access credentials": "TEST"}
+              # {"access credentials": WALDUR_TOKEN}
               },
     )
 
 
-def get_or_create_order(offering_data, project_data_for_order, project_item_data):
+def update_project_item(project_item_data, event_data):
+    for change in event_data.changes:
+        if change.after == 'string':  # for testing purposes because of invalid test input in eosc mp
+            pass
+        else:
+            if change.before or change.after == '<OBFUSCATED>':
+                # for testing purposes because of invalid test input in eosc mp
+                pass
+            else:
+                mp.update_project_item(project_id=project_item_data.project_id,
+                                       project_item_id=project_item_data.id,
+                                       status=ProjectItemStatusEnum(change.after))
+
+
+def get_or_create_order(offering_data, project_data_for_order, project_item_data, event_data):
     order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
     if len(order_filter_list) != 0:
-        # patch_project_item(order_data=order_filter_list[0])
+        # patch_project_item(project_item_data=project_item_data, event_data=event_data)
         return order_filter_list[0]
 
     order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
@@ -93,7 +108,7 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
     post_message(project_item_data=project_item_data,
                  content=content)
     # TODO
-    # patch_project_item(order_data=order_data)
+    patch_project_item(project_item_data=project_item_data, event_data=event_data)
     return order_data
 
 
@@ -136,6 +151,7 @@ def sync_projects():
                                       customer_data=customer_data)
             if event.type == 'update':
                 # TODO
+                # there are no such events atm (eosc marketplace -> project -> edit -> webpage edit (no new events))
                 pass
             if event.type == 'delete':
                 # TODO
@@ -160,10 +176,11 @@ def sync_orders():
                 project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
                 get_or_create_order(offering_data=offering_data,
                                     project_data_for_order=project_data_for_order,
-                                    project_item_data=project_item_data)
+                                    project_item_data=project_item_data,
+                                    event_data=event)
             if event.type == 'update':
-                # TODO
-                pass
+                project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
+                update_project_item(project_item_data=project_item_data, event_data=event)
             if event.type == 'delete':
                 # TODO
                 pass
