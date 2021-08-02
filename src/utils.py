@@ -1,7 +1,6 @@
 import requests
 import os
 import pycountry
-import logging
 import urllib.parse
 from datetime import datetime
 from datetime import timedelta
@@ -76,8 +75,8 @@ def patch_project_item(project_item_data, event_data):
 
 def update_project_item(project_item_data, event_data):
     for change in event_data.changes:
+        # for testing purposes because of invalid test input in eosc mp
         if change.before or change.after == '<OBFUSCATED>':
-            # for testing purposes because of invalid test input in eosc mp
             pass
         else:
             mp.update_project_item(project_id=project_item_data.project_id,
