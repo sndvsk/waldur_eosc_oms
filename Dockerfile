@@ -1,16 +1,20 @@
-FROM ubuntu:20.04
-
-#MAINTANER Your Name "youremail@domain.tld"
+FROM python:3.9.6-buster
 
 RUN apt-get update -y && \
-    apt-get install -y python3-pip python-dev
+    pip install pipenv --no-cache-dir && \
+    git clone https://github.com/cyfronet-fid/oms-adapter-jira.git && \
+    cd oms-adapter-jira && \
+    pipenv install --system
 
-COPY . /src/app
 
-WORKDIR /src/app
+ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"
 
-RUN pip install -r requirements/requirements.txt
+COPY . /src
+
+WORKDIR /src
+
+RUN pip install -r requirements/requirements.txt --no-cache-dir
 
 ENTRYPOINT [ "python3" ]
 
-CMD [ "/src/app/src/app.py" ]
+CMD [ "/src/src/app.py" ]

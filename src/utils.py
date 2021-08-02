@@ -5,9 +5,10 @@ import urllib.parse
 from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
+from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor, ProjectItemStatusEnum
 from waldur_client import WaldurClient
 
-EOSC_URL = "https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/"  # polling url
+EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
 
@@ -42,14 +43,81 @@ def get_events():
     return events
 
 
+def post_message(project_item_data, content):
+    msg_author = MessageAuthor(email="test@example.com",
+                               name="Test Admin",
+                               role="provider")
+
+    msg = MPMessage(project_id=project_item_data.project_id,
+                    project_item_id=project_item_data.id,
+                    author=msg_author,
+                    content=str(content),
+                    scope=ScopeEnum.public)
+
+    # return mp.create_message(message=msg)
+    return mp.post(mp.endpoint.message_list, data=msg.dict(), verify=False)
+
+
+def patch_project_item(project_item_data, event_data):
+    # for change in event_data.changes:
+    #     mp.update_project_item(project_id=project_item_data.project_id,
+    #                            project_item_id=project_item_data.project_item_id,
+    #                            status=ProjectItemStatusEnum(ProjectItemStatusEnum(change.after)),
+    #                            )
+    mp.patch(mp.endpoint.project_item.format(
+        project_id=project_item_data.project_id, project_item_id=project_item_data.id), verify=False,
+        data={"status": {"value": "registered",
+                         "type": "registered"},
+              # "user_secrets": {"access credentials": WALDUR_TOKEN}
+              },
+    )
+
+
+def update_project_item(project_item_data, event_data):
+    for change in event_data.changes:
+        # for testing purposes because of invalid test input in eosc mp
+        if change.before or change.after == '<OBFUSCATED>':
+            pass
+        else:
+            mp.update_project_item(project_id=project_item_data.project_id,
+                                   project_item_id=project_item_data.id,
+                                   status=ProjectItemStatusEnum(change.after))
+
+
+def get_or_create_order(offering_data, project_data_for_order, project_item_data, event_data):
+    order_filter_list = wc.list_orders({'project_uuid': str(project_data_for_order['uuid'])})
+    if len(order_filter_list) != 0:
+        return order_filter_list[0]
+
+    order_data = wc.create_marketplace_order(project=project_data_for_order['uuid'],
+                                             offering=offering_data['uuid'],
+                                             plan=offering_data['plans'][0]['uuid'],
+                                             attributes=offering_data['attributes'],
+                                             limits=None)
+
+    content = "Your request has been successfully processed. " \
+              f"Please login to {WALDUR_URL} to get access to your resource. " \
+              "Invitation has been sent to your email. "
+
+    post_message(project_item_data=project_item_data,
+                 content=content)
+
+    patch_project_item(project_item_data=project_item_data, event_data=event_data)
+    return order_data
+
+
+def get_or_create_order_item():
+    pass
+
+
 def get_or_create_project(project_data, customer_data):
     project_filter_list = wc.list_projects({'backend_id': str(project_data.id)})
-    if len(project_filter_list) == 0:
-        return wc.create_project(customer_uuid=customer_data['uuid'],
-                                 name=project_data.attributes.name,
-                                 backend_id=str(project_data.id))
-    else:
+    if len(project_filter_list) != 0:
         return project_filter_list[0]
+
+    return wc.create_project(customer_uuid=customer_data['uuid'],
+                             name=project_data.attributes.name,
+                             backend_id=str(project_data.id))
 
 
 def get_or_create_customer_for_project(project_data):
@@ -77,6 +145,7 @@ def sync_projects():
                                       customer_data=customer_data)
             if event.type == 'update':
                 # TODO
+                # there are no such events atm (eosc marketplace -> project -> edit -> webpage edit (no new events))
                 pass
             if event.type == 'delete':
                 # TODO
@@ -98,16 +167,14 @@ def sync_orders():
                 offering_data = wc._get_offering(offering="3a878cee7bb749d0bb258d7b8442cb64")  # hardcoded
                 project_data_for_order = get_or_create_project(project_data=project_data,
                                                                customer_data=customer_data)
-                wc.create_marketplace_order(project=project_data_for_order['uuid'],
-                                            offering=offering_data['uuid'],
-                                            # offering name must match with waldur offering
-                                            plan=offering_data['plans'][0]['uuid'],
-                                            # 0 is index of the plan
-                                            attributes=offering_data['attributes'],
-                                            limits=None)
+                project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
+                get_or_create_order(offering_data=offering_data,
+                                    project_data_for_order=project_data_for_order,
+                                    project_item_data=project_item_data,
+                                    event_data=event)
             if event.type == 'update':
-                # TODO
-                pass
+                project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
+                update_project_item(project_item_data=project_item_data, event_data=event)
             if event.type == 'delete':
                 # TODO
                 pass
