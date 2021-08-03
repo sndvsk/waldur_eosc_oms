@@ -3,8 +3,10 @@ from flask import Flask
 import utils as utils
 
 app = Flask(__name__)
-logging.basicConfig(level=logging.DEBUG, format=f'%(asctime)s %(levelname)s %(name)s %(threadName)s : %(message)s')
-app_logger = app.logger
+
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - '
+                                                f'%(message)s')
 
 
 @app.route('/sync-projects')
