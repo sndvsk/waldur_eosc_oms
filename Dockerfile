@@ -4,7 +4,9 @@ RUN apt-get update -y && \
     pip install pipenv --no-cache-dir && \
     git clone https://github.com/cyfronet-fid/oms-adapter-jira.git && \
     cd oms-adapter-jira && \
-    pipenv install --system
+    pipenv install --system && \
+    cd oms-adapter-jira/oms_jira/services
+    # TODO comment multiple lines is mp.py
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"
