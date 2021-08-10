@@ -54,8 +54,10 @@ def get_events():
     return events
 
 
-def get_waldur_offering_data():
-    offering_data = waldur_client._get_offering(offering="3a878cee7bb749d0bb258d7b8442cb64")  # hardcoded
+def get_waldur_offering_data(offering_uuid):
+    offering_data = waldur_client._get_offering(offering=offering_uuid)  # hardcoded
+    # TEST VPC               -> 5162bd1a4dc146bfa8576d62cca49e43
+    # Nordic Test Resource 1 -> 3a878cee7bb749d0bb258d7b8442cb64
     return offering_data
 
 
@@ -291,16 +293,16 @@ def offer_parameters(parameter_type, waldur_offering_data, plan_id, internal=Tru
             "description": waldur_offering_data['plans'][plan_id]['description'],  # "can't be blank"
             "type": parameter_type,
             "config": {
-                "values": [  # TODO ????
-                    "string",
-                    0
+                "values": [
                 ],
-                "minItems": 0,
-                "maxItems": waldur_offering_data['plans'][plan_id]['max_amount']
+                "minItems": len(waldur_offering_data['components']),
+                "maxItems": len(waldur_offering_data['components'])
             },
             "value_type": "string",
             "unit": waldur_offering_data['plans'][plan_id]['unit']
         })
+        for i in waldur_offering_data['components']:
+            full_data[0]['config']['values'].append(i['name'])
     if parameter_type == 'date':
         full_data.append({
             "id": waldur_offering_data['plans'][plan_id]['uuid'],
@@ -395,10 +397,10 @@ def get_offer_list_of_resource(resource_id):
     return offer_list_data
 
 
-def create_offer_for_resource(resource_id, waldur_offering_data, parameter_type):
+def create_offer_for_resource(resource_id, waldur_offering_data, parameter_type, plan_id):
     headers, data = offering_request_post_patch(waldur_offering_data=waldur_offering_data,
                                                 parameter_type=parameter_type,
-                                                plan_id=1)
+                                                plan_id=plan_id)
 
     r = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
                       headers=headers,
@@ -419,7 +421,7 @@ def get_offer_from_resource(resource_id, offer_id):
 def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, parameter_type):
     headers, data = offering_request_post_patch(waldur_offering_data=waldur_offering_data,
                                                 parameter_type=parameter_type,
-                                                plan_id=1)
+                                                plan_id=0)
     r = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                        headers=headers,
                        data=data)
@@ -438,8 +440,14 @@ def delete_offer_from_resource(resource_id, offer_id):
 def process_offerings():
     resource_list_data = get_resource_list()
     resource_id = resource_list_data['resources'][1]['id']  # hardcoded resource: Nordic Test Resource 1
-    # resource_data = get_resource(resource_id)
-    offering_data = get_waldur_offering_data()
-    data = create_offer_for_resource(resource_id=resource_id,
-                                     waldur_offering_data=offering_data,
-                                     parameter_type="attribute")
+    offering_data_test1 = get_waldur_offering_data("5162bd1a4dc146bfa8576d62cca49e43")
+    offering_data_test2 = get_waldur_offering_data("3a878cee7bb749d0bb258d7b8442cb64")
+    create_offer_for_resource(resource_id=resource_id,
+                              waldur_offering_data=offering_data_test1,
+                              parameter_type="multiselect",
+                              plan_id=0)
+    create_offer_for_resource(resource_id=resource_id,
+                              waldur_offering_data=offering_data_test2,
+                              parameter_type="attribute",
+                              plan_id=1)
+
