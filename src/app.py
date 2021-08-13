@@ -35,13 +35,6 @@ def sync_offerings():
     return "Offerings have been gotten"
 
 
-@app.route('/test')
-def test():
-    utils.test()
-    logging.info('test is over')
-    return "Test is over"
-
-
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1')
 

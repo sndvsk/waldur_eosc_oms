@@ -473,7 +473,3 @@ def process_offerings():
                         offering_data=offering_data_test2,
                         parameter_type=re.sub('<[^<]+?>', '', offering_data_test2['plans'][0]['description']))
 
-
-def test():
-    # insert sth to test
-    pass
