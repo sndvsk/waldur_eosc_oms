@@ -66,7 +66,7 @@ def get_waldur_offering_data(offering_uuid):
 def invite_user_to_project(email, project):
     waldur_client.create_project_invitation(email=email,
                                             project=project,
-                                            project_role=ProjectRole.MEMBER)
+                                            project_role=ProjectRole.ADMINISTRATOR)
 
 
 def post_message(project_item_data, content):
@@ -150,6 +150,9 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
     post_message(project_item_data=project_item_data,
                  content=content)
 
+    # invite_user_to_project(email=project_item_data.,
+    #                        project=)
+
     patch_project_item(project_item_data=project_item_data)
     return order_data
 
@@ -170,6 +173,8 @@ def get_or_create_project(project_data, customer_data):
         logging.info(f'Project with backend_id {project_data.id} was created in WALDUR. '
                      f'Name of the project: {project_data.attributes.name}. '
                      f'Customer name: {project_data.attributes.organization}.')
+        invite_user_to_project(email=project_data.owner.email,
+                               project=project_filter_list[0]['uuid'])
         return create_project_data
 
 
