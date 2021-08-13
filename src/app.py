@@ -45,6 +45,15 @@ def test():
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1')
 
-    # schedule.every().hour.do(sync_projects)
-    # schedule.every().hour.do(sync_orders)
-    # schedule.every().hour.do(sync_offerings)
+
+# # Time
+# schedule.every(20).seconds.do(sync_projects)
+# schedule.every(30).seconds.do(sync_orders)
+#
+#
+# try:
+#     while True:
+#         schedule.run_pending()
+#         time.sleep(1)
+# except KeyboardInterrupt:
+#     print('Interrupted!')
