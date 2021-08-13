@@ -8,7 +8,7 @@ from datetime import datetime
 from datetime import timedelta
 from oms_jira import MPClient
 from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor, ProjectItemStatusEnum
-from waldur_client import WaldurClient
+from waldur_client import WaldurClient, ProjectRole
 
 from src.app import app
 
@@ -60,6 +60,12 @@ def get_waldur_offering_data(offering_uuid):
     # TEST VPC               -> 5162bd1a4dc146bfa8576d62cca49e43
     # Nordic Test Resource 1 -> 3a878cee7bb749d0bb258d7b8442cb64
     return offering_data
+
+
+def invite_user_to_project(email, project):
+    waldur_client.create_project_invitation(email=email,
+                                            project=project,
+                                            project_role=ProjectRole.MEMBER)
 
 
 def post_message(project_item_data, content):
@@ -235,12 +241,6 @@ def sync_orders():
                 pass
             else:
                 pass
-
-
-# TODO
-def sync_members():
-    # TODO
-    pass
 
 
 def resource_and_offering_request():
@@ -466,3 +466,8 @@ def process_offerings():
     get_or_create_offer(resource_id=resource_id_2,
                         offering_data=offering_data_test2,
                         parameter_type=re.sub('<[^<]+?>', '', offering_data_test2['plans'][0]['description']))
+
+
+def test():
+    invite_user_to_project(email="123@example.com",
+                           project="6f77a2e7cbbe4ca882635d9ade3ff771")

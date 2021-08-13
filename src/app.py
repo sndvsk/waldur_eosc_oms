@@ -1,7 +1,12 @@
 import logging
 from flask import Flask
 import utils as utils
+import schedule
+import time
 
+# https://pypi.org/project/python-crontab/
+
+# TODO remove flask
 app = Flask(__name__)
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -30,5 +35,16 @@ def sync_offerings():
     return "Offerings have been gotten"
 
 
+@app.route('/test')
+def test():
+    utils.test()
+    logging.info('test is over')
+    return "Test is over"
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='127.0.0.1')
+
+    # schedule.every().hour.do(sync_projects)
+    # schedule.every().hour.do(sync_orders)
+    # schedule.every().hour.do(sync_offerings)
