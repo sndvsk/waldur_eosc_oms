@@ -34,8 +34,8 @@ OFFER_URL = "/api/v1/resources/%s/offers/%s"
 
 def get_waldur_token():
     WALDUR_AUTH = {'username': USERNAME, 'password': PASSWORD}
-    r = requests.post(WALDUR_API_AUTH, data=WALDUR_AUTH)
-    content = r.json()
+    response = requests.post(WALDUR_API_AUTH, data=WALDUR_AUTH)
+    content = response.json()
     logging.info('GET WALDUR TOKEN')
     return content['token']
 
@@ -57,8 +57,8 @@ def get_events():
 
 
 def get_waldur_offering_data(offering_uuid):
-    offering_data = waldur_client._get_offering(offering=offering_uuid)  # hardcoded
-    # TEST VPC               -> 5162bd1a4dc146bfa8576d62cca49e43
+    offering_data = waldur_client._get_offering(offering=offering_uuid)
+    # Nordic Test Resource 2 -> 5162bd1a4dc146bfa8576d62cca49e43
     # Nordic Test Resource 1 -> 3a878cee7bb749d0bb258d7b8442cb64
     return offering_data
 
@@ -150,9 +150,6 @@ def get_or_create_order(offering_data, project_data_for_order, project_item_data
     post_message(project_item_data=project_item_data,
                  content=content)
 
-    # invite_user_to_project(email=project_item_data.,
-    #                        project=)
-
     patch_project_item(project_item_data=project_item_data)
     return order_data
 
@@ -184,21 +181,21 @@ def get_or_create_customer_for_project(project_data):
         logging.info(f'Customer named {project_data.attributes.organization} is already in WALDUR.')
         return customers_filter_list[0]  # data of existing customer with this name
     try:
-        create_customer_data = waldur_client.create_customer(name=project_data.attributes.organization,
-                                                             # data of a new customer
-                                                             email=project_data.owner.email,
-                                                             backend_id=project_data.attributes.organization,
-                                                             country=pycountry.countries.get(
-                                                                 name=project_data.attributes.country).alpha_2,
-                                                             domain=project_data.attributes.department_webpage,
-                                                             homepage=project_data.attributes.department_webpage,
-                                                             native_name=project_data.attributes.organization,
-                                                             )
+        customer_data = waldur_client.create_customer(name=project_data.attributes.organization,
+                                                      # data of a new customer
+                                                      email=project_data.owner.email,
+                                                      backend_id=project_data.attributes.organization,
+                                                      country=pycountry.countries.get(
+                                                          name=project_data.attributes.country).alpha_2,
+                                                      domain=project_data.attributes.department_webpage,
+                                                      homepage=project_data.attributes.department_webpage,
+                                                      native_name=project_data.attributes.organization,
+                                                      )
     except ValueError:
         logging.error(f'Cannot customer named {project_data.attributes.organization}.')
     else:
         logging.info(f'Customer named {project_data.attributes.organization} was created in WALDUR.')
-        return create_customer_data
+        return customer_data
 
 
 def sync_projects():
@@ -382,25 +379,25 @@ def offering_request_delete():
 
 def get_resource_list():
     headers = resource_and_offering_request()
-    r = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL),
-                     headers=headers)
-    resource_list_data = json.loads(r.text)
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL),
+                            headers=headers)
+    resource_list_data = json.loads(response.text)
     return resource_list_data
 
 
 def get_resource(resource_id):
     headers = resource_and_offering_request()
-    r = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
-                     headers=headers)
-    resource_data = json.loads(r.text)
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
+                            headers=headers)
+    resource_data = json.loads(response.text)
     return resource_data
 
 
 def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
-    r = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
-                     headers=headers)
-    offer_list_data = json.loads(r.text)
+    response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
+                            headers=headers)
+    offer_list_data = json.loads(response.text)
     return offer_list_data
 
 
@@ -409,18 +406,18 @@ def create_offer_for_resource(resource_id, waldur_offering_data, parameter_type,
                                                 parameter_type=parameter_type,
                                                 plan=plan)
 
-    r = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
-                      headers=headers,
-                      data=json.dumps(data))
-    offer_post_data = json.loads(r.request.body)
+    response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
+                             headers=headers,
+                             data=json.dumps(data))
+    offer_post_data = json.loads(response.request.body)
     return offer_post_data
 
 
 def get_offer_from_resource(resource_id, offer_id):
     headers = resource_and_offering_request()
-    r = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                      headers=headers)
-    offer_data = json.loads(r.text)
+    response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+                             headers=headers)
+    offer_data = json.loads(response.text)
     print(offer_data)
     return offer_data
 
@@ -429,18 +426,18 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, param
     headers, data = offering_request_post_patch(waldur_offering_data=waldur_offering_data,
                                                 parameter_type=parameter_type,
                                                 plan=plan)
-    r = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                       headers=headers,
-                       data=data)
-    patch_offer_data = json.loads(r.text)
+    response = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+                              headers=headers,
+                              data=data)
+    patch_offer_data = json.loads(response.text)
     return patch_offer_data
 
 
 def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
-    r = requests.delete(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                        headers=headers)
-    delete_offer_data = json.loads(r.text)
+    response = requests.delete(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
+                               headers=headers)
+    delete_offer_data = json.loads(response.text)
     return delete_offer_data
 
 
@@ -472,4 +469,3 @@ def process_offerings():
     get_or_create_offer(resource_id=resource_id_2,
                         offering_data=offering_data_test2,
                         parameter_type=re.sub('<[^<]+?>', '', offering_data_test2['plans'][0]['description']))
-
