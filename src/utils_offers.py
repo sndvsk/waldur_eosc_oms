@@ -1,11 +1,9 @@
 import json
 import logging
 import os
-import re
 import urllib.parse
 import requests
-
-from src.utils_orders import EOSC_URL, get_waldur_offering_data
+from waldur_client import WaldurClient
 
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -13,11 +11,21 @@ logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(li
                                                f'%(message)s')
 
 
+EOSC_URL = os.environ.get('EOSC_URL')  # polling url
+WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 OFFERING_TOKEN = os.environ.get('OFFERING_TOKEN')
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
+
+WALDUR_URL = os.environ.get('WALDUR_URL')
+WALDUR_API = urllib.parse.urljoin(WALDUR_URL, 'api/')
+
+
+def get_waldur_client():
+    waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
+    return waldur_client
 
 
 def resource_and_offering_request():
@@ -28,117 +36,21 @@ def resource_and_offering_request():
     return headers
 
 
-def offer_parameters(parameter_type, waldur_offering_data, plan, internal=True):
-    full_data = []
-    if parameter_type == 'attribute':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # plan['article_code'],    # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # plan['description'],   # "can't be blank"
-            "type": parameter_type,
-            "value": str(int(float(plan['unit_price']))),
-            "value_type": "string"
-        })
-    if parameter_type == 'input':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "unit": plan['unit'],
-            "value_type": "string"
-        })
-    if parameter_type == 'select':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "config": {
-                "values": [
-                ],
-                "mode": "dropdown"
-            },
-            "value_type": "string",
-            "unit": plan['unit']
-        })
-        for i in waldur_offering_data['components']:
-            full_data[0]['config']['values'].append(i['name'])
-    if parameter_type == 'multiselect':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "config": {
-                "values": [
-                ],
-                "minItems": len(waldur_offering_data['components']),
-                "maxItems": len(waldur_offering_data['components'])
-            },
-            "value_type": "string",
-            "unit": plan['unit']
-        })
-        for i in waldur_offering_data['components']:
-            full_data[0]['config']['values'].append(i['name'])
-    if parameter_type == 'date':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "value_type": "string"
-        })
-    if parameter_type == 'range':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "unit": plan['unit'],
-            "value_type": "integer",
-            "config": {
-                "minimum": 0,
-                "maximum": plan['max_amount'],
-                "exclusiveMinimum": internal,
-                "exclusiveMaximum": internal
-            }
-        })
-    if parameter_type == 'quantity_price':
-        full_data.append({
-            "id": plan['uuid'],
-            "label": plan['article_code'],  # "can't be blank"
-            "description": re.sub('<[^<]+?>', '', plan['description']),  # "can't be blank"
-            "type": parameter_type,
-            "unit": plan['unit'],
-            "value_type": "integer",
-            "config": {
-                "start_price": plan['init_price'],
-                "step_price": plan['switch_price'],
-                "max": plan['max_amount'],
-                "currency": "Euro"
-            }
-        })
-    return full_data
-
-
-def offering_request_post_patch(waldur_offering_data, plan, parameter_type, internal=True):
+def offering_request_post_patch(offer_name: str, offer_description: str, offer_parameters, internal=True):
     headers = {
         'accept': 'application/json',
         'Content-Type': 'application/json',
         'X-User-Token': OFFERING_TOKEN,
     }
     data = {
-        'name': plan['name'],
-        'description': re.sub('<[^<]+?>', '', plan['description']),  # plan['description'],  # "can't be blank"
+        'name': offer_name,
+        'description': offer_description,
         'order_type': 'order_required',
         'primary_oms_id': 2,
         'oms_params': {},
         'order_url': 'https://example.com/',  # plan['url'],  # "is not a valid URL"
         'internal': internal,
-        'parameters': offer_parameters(parameter_type=parameter_type,
-                                       waldur_offering_data=waldur_offering_data,
-                                       plan=plan),
+        'parameters': offer_parameters,
     }
     return headers, data
 
@@ -171,35 +83,43 @@ def get_offer_list_of_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
                             headers=headers)
-    offer_list_data = json.loads(response.text)
-    return offer_list_data
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise
 
 
-def create_offer_for_resource(resource_id, waldur_offering_data, parameter_type, plan):
-    headers, data = offering_request_post_patch(waldur_offering_data=waldur_offering_data,
-                                                parameter_type=parameter_type,
-                                                plan=plan)
+def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_description: str, offer_parameters,
+                              internal=True):
+    headers = {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-User-Token': OFFERING_TOKEN,
+    }
+    data = {
+        'name': offer_name,
+        'description': offer_description or "N/A",
+        'order_type': 'order_required',
+        'primary_oms_id': 2,
+        'oms_params': {},
+        'order_url': 'https://example.com/',  # plan['url'],  # "is not a valid URL"
+        'internal': internal,
+        'parameters': offer_parameters,
+    }
 
-    response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(resource_id))),
+    response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % eosc_resource_id),
                              headers=headers,
                              data=json.dumps(data))
-    offer_post_data = json.loads(response.request.body)
-    return offer_post_data
+    if response.status_code != 201:
+        logging.error('Failed to create an offer.', response.status_code, response.text)
+    else:
+        logging.info(f'Successfully created offer {offer_name} for {eosc_resource_id}.')
 
 
-def get_offer_from_resource(resource_id, offer_id):
-    headers = resource_and_offering_request()
-    response = requests.post(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
-                             headers=headers)
-    offer_data = json.loads(response.text)
-    print(offer_data)
-    return offer_data
-
-
-def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, parameter_type, plan):
-    headers, data = offering_request_post_patch(waldur_offering_data=waldur_offering_data,
-                                                parameter_type=parameter_type,
-                                                plan=plan)
+def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer_description, offer_parameters):
+    headers, data = offering_request_post_patch(offer_name=waldur_offering_data,
+                                                offer_description=offer_description,
+                                                offer_parameters=offer_parameters)
     response = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                               headers=headers,
                               data=data)
@@ -215,31 +135,74 @@ def delete_offer_from_resource(resource_id, offer_id):
     return delete_offer_data
 
 
-def get_or_create_offer(resource_id, offering_data, parameter_type):
-    off_list = get_offer_list_of_resource(resource_id)
-    waldur_offer_list = []
-    for offer in offering_data['plans']:
-        waldur_offer_list.append(offer['uuid'])
-    if len(off_list['offers']) == 0:
-        for offering_plan in offering_data['plans']:
-            create_offer_for_resource(resource_id=resource_id,
-                                      waldur_offering_data=offering_data,
-                                      parameter_type=parameter_type,
-                                      plan=offering_plan)
-    else:
-        for eosc_offer in off_list['offers']:
-            if eosc_offer['parameters'][0]['id'] in waldur_offer_list:
-                pass
+def _normalize_limits(limit, limit_type):
+    if limit_type in ['storage', 'ram']:
+        return int(limit / 1024)
+    return limit
+
+
+def sync_offer(eosc_resource_id, waldur_offering):
+    plans = waldur_offering['plans']
+    eosc_offers = get_offer_list_of_resource(eosc_resource_id)['offers']
+    eosc_offers_names = {offer['name'] for offer in eosc_offers}
+    for plan in plans:
+        if plan['name'] in eosc_offers_names:
+            logging.info(f"Skipping creation of plan {plan['name']}. Offer with the same name already exists.")
+            continue
+        parameters = []
+        # add name
+        parameters.append(
+            {
+                "id": "name",
+                "label": "Name",
+                "description": "Name will be visible in accounting",
+                "type": "input",
+                "value_type": "string",
+                "unit": "",
+            },
+        )
+        # TODO: 2. Add description field - always present, optional
+        # TODO 3. input parameters from offering
+        for component in waldur_offering['components']:
+            if component['billing_type'] == 'limit':
+                parameters.append(
+                    {
+                        "id": component['type'],
+                        "label": component['name'],
+                        "description": component['description'] or f"Amount of {component['name']} in "
+                                                                   f"{waldur_offering['name']}.",
+                        "type": "range",
+                        "value_type": "integer",  # waldur only expects numeric values for limit-type components
+                        "unit": component['measured_unit'],
+                        "config": {
+                            "minimum": _normalize_limits(component['min_value'], component['type']),
+                            "maximum": _normalize_limits(component['max_value'], component['type']),
+                            "exclusiveMinimum": False,
+                            "exclusiveMaximum": False
+                        }
+                    },
+                )
+
+        create_offer_for_resource(
+            eosc_resource_id=eosc_resource_id,
+            offer_name=plan['name'],
+            offer_description=plan['description'],
+            offer_parameters=parameters,
+        )
 
 
 def process_offerings():
     resource_list_data = get_resource_list()['resources']
+
     resource_id_1 = resource_list_data[1]['id']  # hardcoded resource: Nordic Test Resource 1
+    offering_data_test1 = get_waldur_client()._get_offering(offering="08f5dce57d784ee88499109ca9653f02")
+    sync_offer(eosc_resource_id=resource_id_1,
+               waldur_offering=offering_data_test1)
+
     resource_id_2 = resource_list_data[0]['id']  # hardcoded resource: Nordic Test Resource 2
-    offering_data_test1 = get_waldur_offering_data("3a878cee7bb749d0bb258d7b8442cb64")
-    offering_data_test2 = get_waldur_offering_data("5162bd1a4dc146bfa8576d62cca49e43")
-    get_or_create_offer(resource_id=resource_id_1, offering_data=offering_data_test1,
-                        parameter_type=re.sub('<[^<]+?>', '', offering_data_test1['plans'][0]['description']))
-    get_or_create_offer(resource_id=resource_id_2,
-                        offering_data=offering_data_test2,
-                        parameter_type=re.sub('<[^<]+?>', '', offering_data_test2['plans'][0]['description']))
+    offering_data_test2 = get_waldur_client()._get_offering(offering="4ce883470b7242beb7368becf614d1ec")
+    sync_offer(eosc_resource_id=resource_id_2,
+               waldur_offering=offering_data_test2)
+
+
+process_offerings()

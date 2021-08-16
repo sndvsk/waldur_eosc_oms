@@ -36,6 +36,7 @@ waldur_client = WaldurClient(WALDUR_API, get_waldur_token())
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
+# noinspection DuplicatedCode
 def get_time(time_delta=timedelta(days=20)):
     now = datetime.now()
     test_time = now - time_delta  # because polling is not working with time that is "now"
@@ -219,7 +220,6 @@ def sync_orders():
             customer_data = get_or_create_customer_for_project(project_data=project_data)
             if event.type == 'create':
                 offering_data = get_waldur_offering_data("3a878cee7bb749d0bb258d7b8442cb64")
-                # logging.info(f'Using offering {offering_data["name"]}.')
                 project_data_for_order = get_or_create_project(project_data=project_data,
                                                                customer_data=customer_data)
                 project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
