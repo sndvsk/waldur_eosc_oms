@@ -5,11 +5,9 @@ import urllib.parse
 import requests
 from waldur_client import WaldurClient
 
-
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(lineno)d %(levelname)s - '
                                                f'%(message)s')
-
 
 EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
@@ -92,9 +90,9 @@ def get_offer_list_of_resource(resource_id):
 def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_description: str, offer_parameters,
                               internal=True):
     headers = {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-User-Token': OFFERING_TOKEN,
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-User-Token': OFFERING_TOKEN,
     }
     data = {
         'name': offer_name,
@@ -136,6 +134,9 @@ def delete_offer_from_resource(resource_id, offer_id):
 
 
 def _normalize_limits(limit, limit_type):
+    if limit is None:
+        limit = 0
+        return limit
     if limit_type in ['storage', 'ram']:
         return int(limit / 1024)
     return limit
@@ -151,6 +152,7 @@ def sync_offer(eosc_resource_id, waldur_offering):
             continue
         parameters = []
         # add name
+
         parameters.append(
             {
                 "id": "name",
@@ -167,7 +169,25 @@ def sync_offer(eosc_resource_id, waldur_offering):
             if component['billing_type'] == 'limit':
                 parameters.append(
                     {
-                        "id": component['type'],
+                        "id": "limit " + component['type'],
+                        "label": component['name'],
+                        "description": component['description'] or f"Amount of {component['name']} in "
+                                                                   f"{waldur_offering['name']}.",
+                        "type": "range",
+                        "value_type": "integer",  # waldur only expects numeric values for limit-type components
+                        "unit": component['measured_unit'],
+                        "config": {
+                            "minimum": _normalize_limits(component['min_value'], component['type']),
+                            "maximum": _normalize_limits(component['max_value'], component['type']),
+                            "exclusiveMinimum": False,
+                            "exclusiveMaximum": False
+                        }
+                    },
+                )
+            if component['billing_type'] == 'usage':
+                parameters.append(
+                    {
+                        "id": "attributes " + component['type'],
                         "label": component['name'],
                         "description": component['description'] or f"Amount of {component['name']} in "
                                                                    f"{waldur_offering['name']}.",
@@ -194,15 +214,18 @@ def sync_offer(eosc_resource_id, waldur_offering):
 def process_offerings():
     resource_list_data = get_resource_list()['resources']
 
-    resource_id_1 = resource_list_data[1]['id']  # hardcoded resource: Nordic Test Resource 1
+    # creates offering in eosc
+    # we need to add offer to project in eosc in order to successfully execute utils_orders.py
+
+    resource_id_1 = resource_list_data[1]['id']  # hardcoded resource: SLURM
     offering_data_test1 = get_waldur_client()._get_offering(offering="08f5dce57d784ee88499109ca9653f02")
     sync_offer(eosc_resource_id=resource_id_1,
                waldur_offering=offering_data_test1)
 
-    resource_id_2 = resource_list_data[0]['id']  # hardcoded resource: Nordic Test Resource 2
-    offering_data_test2 = get_waldur_client()._get_offering(offering="4ce883470b7242beb7368becf614d1ec")
-    sync_offer(eosc_resource_id=resource_id_2,
-               waldur_offering=offering_data_test2)
+    # resource_id_2 = resource_list_data[0]['id']  # hardcoded resource: OpenStack VPC
+    # offering_data_test2 = get_waldur_client()._get_offering(offering="4ce883470b7242beb7368becf614d1ec")
+    # sync_offer(eosc_resource_id=resource_id_2,
+    #            waldur_offering=offering_data_test2)
 
 
-process_offerings()
+# process_offerings()
