@@ -211,6 +211,62 @@ def sync_offer(eosc_resource_id, waldur_offering):
         )
 
 
+# TODO: method and submethods
+def is_resource_up_to_date(eosc_resource, waldur_offering):
+    pass
+
+
+def are_offers_up_to_date(osc_resource_offers, waldur_offering):
+    pass
+
+
+def update_eosc_resource(eosc_resource, waldur_offering):
+    pass
+
+
+def update_eosc_offers(eosc_resource, waldur_offering):
+    pass
+
+
+def get_or_create_eosc_resource(waldur_offering, eosc_provider_portal):
+    pass
+
+
+def get_or_create_eosc_resource_offer(waldur_offering, eosc_marketplace):
+    pass
+
+
+def get_or_create_eosc_provider(customer, eosc_provider_portal):
+    pass
+
+
+def get_waldur_offerings(deployment, token):
+    pass
+
+
+def test(eosc_provider_portal=None, eosc_marketplace=None, deployment=None):
+    # waldur_offerings = get_waldur_offerings(deployment, token)
+    waldur_offerings = get_waldur_offerings(deployment, WALDUR_TOKEN)
+
+    for waldur_offering in waldur_offerings:
+        provider, created = get_or_create_eosc_provider(waldur_offering.customer, eosc_provider_portal)
+        if created:
+            logging.info(f'Provider has been created, pending approval')
+        if provider.is_approved:
+            eosc_resource, resource_created = get_or_create_eosc_resource(waldur_offering, eosc_provider_portal)
+            eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(waldur_offering, eosc_marketplace)
+
+        if resource_created:
+            logging.info('New resource has been created in EOSC', eosc_resource)
+        if offer_created:
+            logging.info('New offering has been created in EOSC', eosc_resource)
+
+        if not resource_created and not is_resource_up_to_date(eosc_resource, waldur_offering):
+            update_eosc_resource(eosc_resource, waldur_offering)
+        if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_offering):
+            update_eosc_offers(eosc_resource, waldur_offering)
+
+
 def process_offerings():
     resource_list_data = get_resource_list()['resources']
 
@@ -226,6 +282,5 @@ def process_offerings():
     # offering_data_test2 = get_waldur_client()._get_offering(offering="4ce883470b7242beb7368becf614d1ec")
     # sync_offer(eosc_resource_id=resource_id_2,
     #            waldur_offering=offering_data_test2)
-
 
 # process_offerings()

@@ -4,7 +4,6 @@ import re
 import pycountry
 import urllib.parse
 from datetime import datetime
-from datetime import timedelta
 from oms_jira import MPClient
 from oms_jira.services.mp import MPMessage, ScopeEnum, MessageAuthor, ProjectItemStatusEnum
 from waldur_client import WaldurClient, ProjectRole
@@ -44,21 +43,6 @@ def get_waldur_client():
 
 
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
-
-
-def get_time(
-        offset_minutes=10,
-        # offset_hours=10,
-        # offset_days=30
-):
-    timedelta(days=30)
-    now = datetime.utcnow()
-    test_time = now - timedelta(
-        minutes=offset_minutes,
-        # hours=offset_hours,
-        # days=offset_days
-    )
-    return test_time
 
 
 def refresh_timestamp(time_now):    # file must be present, create in app.py or dockerfile
@@ -271,14 +255,23 @@ def get_target_waldur_organization():
     return get_waldur_client().list_customers({"display_name": WALDUR_TARGET_ORGANIZATION_NAME})
 
 
+def get_new_events(events, timestamp):
+    new_events = []
+    for event in events:
+        event_timestamp = event.timestamp.replace(tzinfo=None)
+        if event_timestamp < timestamp:
+            new_events.append(event)
+        else:
+            break
+
+    return new_events
+
+
 def process_orders():
-    timestamp = get_time(
-        offset_minutes=3,
-        # offset_hours=3,
-        # offset_days=1
-    )
-    # TODO: Load timestamp of the last execution
-    new_events = get_events(refresh_timestamp(time_now=timestamp))
+    # test with older timestamps in last_timestamp.txt
+    timestamp = datetime.utcnow()
+    events = get_events(refresh_timestamp(time_now=timestamp))
+    new_events = get_new_events(events, timestamp)
     for event in new_events:
         if event.resource == 'project_item' and event.type == 'create':
 
@@ -286,17 +279,15 @@ def process_orders():
             eosc_project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
 
             waldur_organization_data = get_target_waldur_organization()
-
-            # TODO: offering_data = get_waldur_client()._get_offering(offering=eosc_project_item_data['attributes'][
-            #  'service'], shared=True)
-            # delete hardcode
-            waldur_offering_data = get_waldur_client()._get_offering(offering='08f5dce57d784ee88499109ca9653f02')
+            waldur_offering_data = get_waldur_client().list_marketplace_offerings(
+                {'name_exact': eosc_project_item_data.attributes.service}
+            )
 
             waldur_project_data = get_or_create_project(
                 eosc_project_data=eosc_project_data,
                 waldur_organization_data=waldur_organization_data
             )
-            create_order(waldur_offering_data=waldur_offering_data,
+            create_order(waldur_offering_data=waldur_offering_data[0],
                          waldur_project_data_for_order=waldur_project_data,
                          eosc_project_item_data=eosc_project_item_data)
 
