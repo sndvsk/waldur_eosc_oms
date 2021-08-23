@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import pycountry
 import urllib.parse
 from datetime import datetime
@@ -45,7 +46,6 @@ def get_waldur_client():
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
-# noinspection DuplicatedCode
 def get_time(
         offset_minutes=10,
         # offset_hours=10,
@@ -62,8 +62,17 @@ def get_time(
 
 
 def refresh_timestamp(time_now):    # file must be present, create in app.py or dockerfile
-    with open('last_timestamp.txt', 'r') as stamp:
-        last_timestamp = stamp.readline()
+    try:
+        with open('last_timestamp.txt', 'r') as stamp:
+            last_timestamp = stamp.readline()
+
+    except FileNotFoundError:
+        with open('last_timestamp.txt', 'w+') as stamp:
+            last_timestamp = datetime.utcnow()
+            logging.info(f'File {stamp} was created.')
+
+    else:
+        logging.info(f'Timestamp: {last_timestamp} from {stamp}')
 
     now = str(time_now)
 
@@ -131,7 +140,6 @@ def patch_project_item(project_item_data):
 
 
 def update_project_item(project_item_data, event_data):
-    # TODO check if was already updated
     for change in event_data.changes:
         # for testing purposes because of invalid test input in eosc mp
         try:
@@ -164,13 +172,16 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
     limits = {}
 
 # 1. Extract mandatory name from the attributes
-    # TODO: cleanup invalid symbols from name
     attributes['name'] = _get_item_value_by_name(eosc_project_item_data.attributes.offer_properties, 'name')
-    if attributes['name'] == 'name':
-        attributes['name'] = eosc_project_item_data.attributes.offer_properties['value']
-
-    if attributes['name'] is None:
-        attributes['name'] = 'None'
+    try:
+        if attributes['name'] == 'name':
+            attributes['name'] = re.sub('[^A-Za-z0-9-]+',   # alphanumeric values and hyphen
+                                        '',
+                                        eosc_project_item_data.attributes.offer_properties['value'])
+    except attributes['name'] is None:
+        logging.error(f'Name of the order can not be {None}!')
+    else:
+        logging.info(f'Name if the order is correct: {attributes["name"]}')
 
     # TODO: Decide what goes where based on id
     for offer_property in eosc_project_item_data.attributes.offer_properties:
@@ -275,10 +286,10 @@ def process_orders():
             eosc_project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
 
             waldur_organization_data = get_target_waldur_organization()
-            # get_or_create_customer_for_project(project_data=project_data)
 
             # TODO: offering_data = get_waldur_client()._get_offering(offering=eosc_project_item_data['attributes'][
             #  'service'], shared=True)
+            # delete hardcode
             waldur_offering_data = get_waldur_client()._get_offering(offering='08f5dce57d784ee88499109ca9653f02')
 
             waldur_project_data = get_or_create_project(

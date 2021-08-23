@@ -16,7 +16,8 @@ COPY . /src
 
 WORKDIR /src
 
-RUN pip install -r requirements/requirements.txt --no-cache-dir
+RUN pip install -r requirements/requirements.txt --no-cache-dir && \
+    touch src/last_timestamp.txt
 
 ENTRYPOINT [ "python3" ]
 

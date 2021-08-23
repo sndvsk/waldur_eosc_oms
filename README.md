@@ -26,3 +26,6 @@ Integration idea
    c. Waldur Order = create a new order for the offering using info from EOSC MP
 
    d. Add new members into the project if not yet present based on the info about the request.
+
+
+# TODO how to use this repo

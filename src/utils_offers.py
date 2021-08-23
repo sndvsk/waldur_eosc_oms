@@ -151,8 +151,8 @@ def sync_offer(eosc_resource_id, waldur_offering):
             logging.info(f"Skipping creation of plan {plan['name']}. Offer with the same name already exists.")
             continue
         parameters = []
-        # add name
 
+        # add name
         parameters.append(
             {
                 "id": "name",
