@@ -45,7 +45,7 @@ def get_waldur_client():
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
-def refresh_timestamp(time_now):    # file must be present, create in app.py or dockerfile
+def refresh_timestamp(time_now):  # file must be present, create in app.py or dockerfile
     try:
         with open('last_timestamp.txt', 'r') as stamp:
             last_timestamp = stamp.readline()
@@ -147,25 +147,37 @@ def _get_item_value_by_name(item_list, property_name):
             return item['value']
 
 
+def get_plan(eosc_project_item_data, waldur_offering_data):
+    plan = None
+    for waldur_plan in waldur_offering_data['plans']:
+        if eosc_project_item_data.attributes.offer == waldur_plan['name']:
+            plan = waldur_plan
+    # if plan is None:
+    #     plan = waldur_offering_data['plans'][0]  # default plan
+    #     logging.error(f'There is no plan: {eosc_project_item_data.attributes.offer} in ETAIS,'
+    #                   f'Trying to use {plan["name"]} plan.')
+    return plan
+
+
 def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_project_item_data):
-    # TODO: lookup plan
-    # plan = find(plan_name == eosc_project_item_data['attributes']['offer'], waldur_offering_data['plans'])
-    plan = waldur_offering_data['plans'][0]['uuid']
+
+    plan = get_plan(eosc_project_item_data,
+                    waldur_offering_data)
 
     attributes = {}
     limits = {}
 
-# 1. Extract mandatory name from the attributes
+    # 1. Extract mandatory name from the attributes
     attributes['name'] = _get_item_value_by_name(eosc_project_item_data.attributes.offer_properties, 'name')
     try:
         if attributes['name'] == 'name':
-            attributes['name'] = re.sub('[^A-Za-z0-9-]+',   # alphanumeric values and hyphen
+            attributes['name'] = re.sub('[^A-Za-z0-9-]+',  # alphanumeric values and hyphen
                                         '',
                                         eosc_project_item_data.attributes.offer_properties['value'])
     except attributes['name'] is None:
         logging.error(f'Name of the order can not be {None}!')
     else:
-        logging.info(f'Name if the order is correct: {attributes["name"]}')
+        logging.info(f'Name of the order is correct: {attributes["name"]}')
 
     # TODO: Decide what goes where based on id
     for offer_property in eosc_project_item_data.attributes.offer_properties:
@@ -186,12 +198,17 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
                 if property_type == 'attributes':
                     attributes[property_id] = offer_property["value"]
 
-    order_data = get_waldur_client().create_marketplace_order(project=waldur_project_data_for_order['uuid'],
-                                                              offering=waldur_offering_data['uuid'],
-                                                              plan=plan,
-                                                              attributes=attributes,
-                                                              limits=limits
-                                                              )
+    try:
+        get_waldur_client().create_marketplace_order(project=waldur_project_data_for_order['uuid'],
+                                                     offering=waldur_offering_data['uuid'],
+                                                     plan=plan['uuid'],
+                                                     attributes=attributes,
+                                                     limits=limits
+                                                     )
+    except ValueError:
+        logging.error(f'There is no {plan["name"]} in ETAIS.')
+    else:
+        logging.info(f'Order for {waldur_offering_data["name"]} with plan {plan["name"]} plan was created.')
 
     content = f"Invitation has been sent to your email: {waldur_project_data_for_order}"
 
@@ -199,7 +216,6 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
                  content=content)
 
     # patch_project_item(project_item_data=eosc_project_item_data)
-    return order_data
 
 
 def get_or_create_project(eosc_project_data, waldur_organization_data):
@@ -207,7 +223,7 @@ def get_or_create_project(eosc_project_data, waldur_organization_data):
         {
             'backend_id': str(eosc_project_data.id),
             'customer_uuid': waldur_organization_data[0]['uuid'],
-         }
+        }
     )
     if len(projects_with_backend_id) != 0:
         logging.info(f'Project with backend_id {eosc_project_data.id} is already in Waldur, '
@@ -255,11 +271,11 @@ def get_target_waldur_organization():
     return get_waldur_client().list_customers({"display_name": WALDUR_TARGET_ORGANIZATION_NAME})
 
 
-def get_new_events(events, timestamp):
+def get_new_events(events, time_now):
     new_events = []
     for event in events:
         event_timestamp = event.timestamp.replace(tzinfo=None)
-        if event_timestamp < timestamp:
+        if event_timestamp < time_now:
             new_events.append(event)
         else:
             break
@@ -269,27 +285,28 @@ def get_new_events(events, timestamp):
 
 def process_orders():
     # test with older timestamps in last_timestamp.txt
-    timestamp = datetime.utcnow()
-    events = get_events(refresh_timestamp(time_now=timestamp))
-    new_events = get_new_events(events, timestamp)
+    time_now = datetime.utcnow()
+    events = get_events(refresh_timestamp(time_now=time_now))
+    new_events = get_new_events(events, time_now)
     for event in new_events:
         if event.resource == 'project_item' and event.type == 'create':
-
             eosc_project_data = mp.get_project(event.project_id)
-            eosc_project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
 
+            eosc_project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
             waldur_organization_data = get_target_waldur_organization()
+
             waldur_offering_data = get_waldur_client().list_marketplace_offerings(
                 {'name_exact': eosc_project_item_data.attributes.service}
             )
-
             waldur_project_data = get_or_create_project(
                 eosc_project_data=eosc_project_data,
                 waldur_organization_data=waldur_organization_data
             )
-            create_order(waldur_offering_data=waldur_offering_data[0],
-                         waldur_project_data_for_order=waldur_project_data,
-                         eosc_project_item_data=eosc_project_item_data)
+            create_order(
+                waldur_offering_data=waldur_offering_data[0],
+                waldur_project_data_for_order=waldur_project_data,
+                eosc_project_item_data=eosc_project_item_data
+            )
 
         if event.type == 'delete' or event.type == "update":
             logging.info("Found event with unsupported type", event.type)
