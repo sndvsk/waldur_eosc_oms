@@ -7,7 +7,8 @@ RUN apt-get update -y && \
     pipenv install --system && \
     cd oms-adapter-jira/oms_jira/services && \
     sed -i "s|first_name: str| # first_name: str|g" mp.py && \
-    sed -i "s|last_name: str| # last_name: str|g" mp.py
+    sed -i "s|last_name: str| # last_name: str|g" mp.py && \
+    sed -i "s|timestamp = datetime.datetime|timestamp: datetime.datetime|g"
 
 
 ENV PYTHONPATH "${PYTHONPATH}:/oms-adapter-jira"

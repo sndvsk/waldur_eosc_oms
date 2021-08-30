@@ -26,7 +26,6 @@ WALDUR_TARGET_ORGANIZATION_NAME = os.environ.get('WALDUR_TARGET_ORGANIZATION_NAM
 
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 
-
 # def get_waldur_token(): #
 #     WALDUR_AUTH = {'username': USERNAME, 'password': PASSWORD}
 #     response = requests.post(WALDUR_API_AUTH, data=WALDUR_AUTH)
@@ -37,10 +36,11 @@ WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 
 # waldur_client = WaldurClient(WALDUR_API, get_waldur_token())
 
-def get_waldur_client():
-    waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
-    return waldur_client
+# def get_waldur_client():
+#     waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
+#     return waldur_client
 
+waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
 
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
@@ -74,9 +74,9 @@ def get_events(timestamp):
 
 
 def invite_user_to_project(email, project):
-    get_waldur_client().create_project_invitation(email=email,
-                                                  project=project,
-                                                  project_role=ProjectRole.ADMINISTRATOR)
+    waldur_client.create_project_invitation(email=email,
+                                            project=project,
+                                            project_role=ProjectRole.ADMINISTRATOR)
 
 
 def post_message(project_item_data, content):
@@ -160,7 +160,6 @@ def get_plan(eosc_project_item_data, waldur_offering_data):
 
 
 def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_project_item_data):
-
     plan = get_plan(eosc_project_item_data,
                     waldur_offering_data)
 
@@ -199,12 +198,12 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
                     attributes[property_id] = offer_property["value"]
 
     try:
-        get_waldur_client().create_marketplace_order(project=waldur_project_data_for_order['uuid'],
-                                                     offering=waldur_offering_data['uuid'],
-                                                     plan=plan['uuid'],
-                                                     attributes=attributes,
-                                                     limits=limits
-                                                     )
+        waldur_client.create_marketplace_order(project=waldur_project_data_for_order['uuid'],
+                                               offering=waldur_offering_data['uuid'],
+                                               plan=plan['uuid'],
+                                               attributes=attributes,
+                                               limits=limits
+                                               )
     except ValueError:
         logging.error(f'There is no {plan["name"]} in ETAIS.')
     else:
@@ -219,7 +218,7 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
 
 
 def get_or_create_project(eosc_project_data, waldur_organization_data):
-    projects_with_backend_id = get_waldur_client().list_projects(
+    projects_with_backend_id = waldur_client.list_projects(
         {
             'backend_id': str(eosc_project_data.id),
             'customer_uuid': waldur_organization_data[0]['uuid'],
@@ -230,9 +229,9 @@ def get_or_create_project(eosc_project_data, waldur_organization_data):
                      f'name: {projects_with_backend_id[0]["name"]}.')
         return projects_with_backend_id[0]
     try:
-        create_project_data = get_waldur_client().create_project(customer_uuid=waldur_organization_data[0]['uuid'],
-                                                                 name=eosc_project_data.attributes.name,
-                                                                 backend_id=str(eosc_project_data.id))
+        create_project_data = waldur_client.create_project(customer_uuid=waldur_organization_data[0]['uuid'],
+                                                           name=eosc_project_data.attributes.name,
+                                                           backend_id=str(eosc_project_data.id))
     except ValueError:
         logging.error(f'Cannot create project with id {eosc_project_data.id}')
     else:
@@ -245,21 +244,21 @@ def get_or_create_project(eosc_project_data, waldur_organization_data):
 
 
 def get_or_create_customer_for_project(project_data):
-    customers_filter_list = get_waldur_client().list_customers({'name_exact': project_data.attributes.organization})
+    customers_filter_list = waldur_client.list_customers({'name_exact': project_data.attributes.organization})
     if len(customers_filter_list) != 0:
         logging.info(f'Customer named {project_data.attributes.organization} is already in WALDUR.')
         return customers_filter_list[0]  # data of existing customer with this name
     try:
-        customer_data = get_waldur_client().create_customer(name=project_data.attributes.organization,
-                                                            # data of a new customer
-                                                            email=project_data.owner.email,
-                                                            backend_id=project_data.attributes.organization,
-                                                            country=pycountry.countries.get(
-                                                                name=project_data.attributes.country).alpha_2,
-                                                            domain=project_data.attributes.department_webpage,
-                                                            homepage=project_data.attributes.department_webpage,
-                                                            native_name=project_data.attributes.organization,
-                                                            )
+        customer_data = waldur_client.create_customer(name=project_data.attributes.organization,
+                                                      # data of a new customer
+                                                      email=project_data.owner.email,
+                                                      backend_id=project_data.attributes.organization,
+                                                      country=pycountry.countries.get(
+                                                          name=project_data.attributes.country).alpha_2,
+                                                      domain=project_data.attributes.department_webpage,
+                                                      homepage=project_data.attributes.department_webpage,
+                                                      native_name=project_data.attributes.organization,
+                                                      )
     except ValueError:
         logging.error(f'Cannot customer named {project_data.attributes.organization}.')
     else:
@@ -268,7 +267,7 @@ def get_or_create_customer_for_project(project_data):
 
 
 def get_target_waldur_organization():
-    return get_waldur_client().list_customers({"display_name": WALDUR_TARGET_ORGANIZATION_NAME})
+    return waldur_client.list_customers({"display_name": WALDUR_TARGET_ORGANIZATION_NAME})
 
 
 def get_new_events(events, time_now):
@@ -295,7 +294,7 @@ def process_orders():
             eosc_project_item_data = mp.get_project_item(event.project_id, event.project_item_id)
             waldur_organization_data = get_target_waldur_organization()
 
-            waldur_offering_data = get_waldur_client().list_marketplace_offerings(
+            waldur_offering_data = waldur_client.list_marketplace_offerings(
                 {'name_exact': eosc_project_item_data.attributes.service}
             )
             waldur_project_data = get_or_create_project(

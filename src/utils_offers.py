@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(li
 EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 OFFERING_TOKEN = os.environ.get('OFFERING_TOKEN')
+PROVIDER_TOKEN = os.environ.get('PROVIDER_TOKEN')
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
@@ -237,6 +238,7 @@ def sync_offer(eosc_resource_id, waldur_offering):
 #
 #
 # def get_waldur_offerings(deployment, token):
+#
 #     return None
 #
 #
