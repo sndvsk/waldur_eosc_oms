@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(li
                                                f'%(message)s')
 
 EOSC_URL = os.environ.get('EOSC_URL')  # polling url
+OFFERING_URL = os.environ.get('OFFERING_URL')
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 OFFERING_TOKEN = os.environ.get('OFFERING_TOKEN')
 PROVIDER_TOKEN = os.environ.get('PROVIDER_TOKEN')
@@ -144,7 +145,7 @@ def _normalize_limits(limit, limit_type):
 
 
 def sync_offer(eosc_resource_id, waldur_offering):
-    waldur_offering = waldur_offering[0]    # because of list
+    waldur_offering = waldur_offering[0]  # because of list
     eosc_offers = get_offer_list_of_resource(eosc_resource_id)['offers']
     eosc_offers_names = {offer['name'] for offer in eosc_offers}
     for plan in waldur_offering['plans']:
@@ -206,6 +207,123 @@ def sync_offer(eosc_resource_id, waldur_offering):
             offer_description=plan['description'],
             offer_parameters=parameters,
         )
+
+
+def create_resource():
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': PROVIDER_TOKEN,
+    }
+    id_asd = 5
+    data = {
+        "id": "tnp." + "nordic_test_resource_" + str(id_asd),
+        "name": "test2",
+        "resourceOrganisation": "tnp",
+        "resourceProviders": [
+            "tnp"
+        ],
+        "webpage": "https://example.com",
+        "description": "string",
+        "tagline": "string",
+        "logo": "https://example.com",
+        "multimedia": [
+        ],
+        "useCases": [
+        ],
+        "scientificDomains": [
+            {
+                "scientificDomain": "scientific_domain-agricultural_sciences",
+                "scientificSubdomain": "scientific_subdomain-agricultural_sciences-agricultural_biotechnology"
+            }
+        ],
+        "categories": [
+            {
+                "category": "category-aggregators_and_integrators-aggregators_and_integrators",
+                "subcategory": "subcategory-aggregators_and_integrators-aggregators_and_integrators-applications"
+            }
+        ],
+        "targetUsers": [
+            "target_user-businesses"
+        ],
+        "accessTypes": [
+        ],
+        "accessModes": [
+        ],
+        "tags": [
+        ],
+        "geographicalAvailabilities": [
+            "EO"
+        ],
+        "languageAvailabilities": [
+            "en"
+        ],
+        "resourceGeographicLocations": [
+        ],
+        "mainContact": {
+            "firstName": "Aleksander",
+            "lastName": "Veske",
+            "email": "aleksander.daniel.veske@ut.ee",
+            "phone": "372",
+            "position": "intern",
+            "organisation": None
+        },
+        "publicContacts": [
+            {
+                "firstName": "test",
+                "lastName": "test",
+                "email": "test@example.com",
+                "phone": "0",
+                "position": None,
+                "organisation": None
+            }
+        ],
+        "helpdeskEmail": "helpdesk@example.com",
+        "securityContactEmail": "security@example.com",
+        "trl": "trl-1",
+        "lifeCycleStatus": None,
+        "certifications": [
+        ],
+        "standards": [
+        ],
+        "openSourceTechnologies": [
+        ],
+        "version": None,
+        "lastUpdate": None,
+        "changeLog": [
+        ],
+        "requiredResources": [
+        ],
+        "relatedResources": [
+        ],
+        "relatedPlatforms": [
+        ],
+        "fundingBody": [
+        ],
+        "fundingPrograms": [
+        ],
+        "grantProjectNames": [
+        ],
+        "helpdeskPage": None,
+        "userManual": None,
+        "termsOfUse": None,
+        "privacyPolicy": None,
+        "accessPolicy": None,
+        "serviceLevel": None,
+        "trainingInformation": None,
+        "statusMonitoring": None,
+        "maintenance": None,
+        "orderType": "order_type-order_required",
+        "order": None,
+        "paymentModel": None,
+        "pricing": None
+    }
+    data = json.dumps(data)
+    response = requests.post(OFFERING_URL, headers=headers, data=data)
+    return response
+
+
+# create_resource()
 
 
 # # TODO: implement sub-methods
@@ -288,3 +406,4 @@ def process_offerings():
 
 
 # process_offerings()
+
