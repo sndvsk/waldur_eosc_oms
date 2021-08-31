@@ -34,14 +34,7 @@ WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 #     return content['token']
 
 
-# waldur_client = WaldurClient(WALDUR_API, get_waldur_token())
-
-# def get_waldur_client():
-#     waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
-#     return waldur_client
-
 waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
-
 mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
 
 
@@ -152,10 +145,6 @@ def get_plan(eosc_project_item_data, waldur_offering_data):
     for waldur_plan in waldur_offering_data['plans']:
         if eosc_project_item_data.attributes.offer == waldur_plan['name']:
             plan = waldur_plan
-    # if plan is None:
-    #     plan = waldur_offering_data['plans'][0]  # default plan
-    #     logging.error(f'There is no plan: {eosc_project_item_data.attributes.offer} in ETAIS,'
-    #                   f'Trying to use {plan["name"]} plan.')
     return plan
 
 

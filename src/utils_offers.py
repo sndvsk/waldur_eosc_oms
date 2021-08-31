@@ -86,7 +86,8 @@ def get_offer_list_of_resource(resource_id):
     if response.status_code == 200:
         return response.json()
     else:
-        raise
+        logging.error(f'Response status code: {response.status_code}')
+        raise requests.exceptions.RequestException
 
 
 def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_description: str, offer_parameters,
