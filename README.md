@@ -1,28 +1,19 @@
 # waldur_eosc_oms
 
-Test resource
-
-	https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/services/nordic-test-resource-1
-
-Test provider
-
-	https://marketplace-3.docker-fid.grid.cyf-kr.edu.pl/providers/tnp
-
-
-
-Integration idea
-
-1. Create a Waldur offering matching the one in EOSC Beta MP
-2. Poll /api/v1/oms/{oms_id}/events
-
-   a. Check if there are new requests
-
-3. If new requests
-
-   a. Waldur Organization = Get or create organization based on project affiliation data from EOSC MP
-
-   b. Waldur Project = get or create project based on project data
-
-   c. Waldur Order = create a new order for the offering using info from EOSC MP
-
-   d. Add new members into the project if not yet present based on the info about the request.
+##Environmental variables
+### utils_orders.py
+EOSC_URL - EOSC Marketplace url to poll events from \
+TOKEN - EOSC Marketplace Ordering API token \
+OMS_ID - EOSC Marketplace OMS ID \
+USERNAME - username for local Waldur \
+PASSWORD - password for local Waldur \
+WALDUR_URL - ETAIS url \
+WALDUR_TARGET_ORGANIZATION_NAME - ETAIS organization to create projects on \
+WALDUR_TOKEN - ETAIS token
+### utils_offers.py
+EOSC_URL - EOSC Marketplace url to poll events from \
+WALDUR_TOKEN - ETAIS token \
+OFFERING_TOKEN - EOSC Marketplace Offering API token \
+PROVIDER_TOKEN - EOSC Portal Provider API token \
+WALDUR_URL - ETAIS url \
+# How to use this repo (currently)
