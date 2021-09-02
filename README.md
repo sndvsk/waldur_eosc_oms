@@ -16,5 +16,5 @@ EOSC_URL - EOSC Marketplace url to poll events from \
 WALDUR_TOKEN - ETAIS token \
 OFFERING_TOKEN - EOSC Marketplace Offering API token \
 PROVIDER_TOKEN - EOSC Portal Provider API token \
-WALDUR_URL - ETAIS url \
+WALDUR_URL - ETAIS url
 # How to use this repo (currently)
