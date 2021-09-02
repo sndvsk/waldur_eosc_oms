@@ -1,6 +1,7 @@
 # waldur_eosc_oms
 
-##Environmental variables
+## Environmental variables
+
 ### utils_orders.py
 EOSC_URL - EOSC Marketplace url to poll events from \
 TOKEN - EOSC Marketplace Ordering API token \
