@@ -32,6 +32,6 @@ if __name__ == '__main__':
 # try:
 #     while True:
 #         schedule.run_pending()
-#         time.sleep(1)
+#         time.sleep(30)
 # except KeyboardInterrupt:
 #     print('Interrupted!')
