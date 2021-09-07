@@ -1,6 +1,6 @@
 # waldur_eosc_oms
 
-##Environmental variables
+## Environmental variables
 ### utils_orders.py
 EOSC_URL - EOSC Marketplace url to poll events from \
 TOKEN - EOSC Marketplace Ordering API token \
@@ -15,5 +15,5 @@ EOSC_URL - EOSC Marketplace url to poll events from \
 WALDUR_TOKEN - ETAIS token \
 OFFERING_TOKEN - EOSC Marketplace Offering API token \
 PROVIDER_TOKEN - EOSC Portal Provider API token \
-WALDUR_URL - ETAIS url \
-# How to use this repo (currently)
+WALDUR_URL - ETAIS url 
+## How to use this repo (currently)
