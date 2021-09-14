@@ -395,7 +395,7 @@ def get_all_offerings_from_resource(eosc_resource_id):
     return offering_names, offering_ids
 
 
-def get_or_create_eosc_resource(waldur_offering, eosc_provider_portal=None):
+def get_or_create_eosc_resource(waldur_offering):  # , eosc_provider_portal=None
     resource_names, resource_ids = get_all_resources_from_customer()
     if waldur_offering['name'] in resource_names:
         existing_resource = get_resource_by_id(resource_ids[resource_names.index(waldur_offering['name'])])
@@ -408,7 +408,7 @@ def get_or_create_eosc_resource(waldur_offering, eosc_provider_portal=None):
         return resource, True
 
 
-def get_or_create_eosc_resource_offer(eosc_resource, waldur_offering, eosc_marketplace=None):
+def get_or_create_eosc_resource_offer(eosc_resource, waldur_offering):  # , eosc_marketplace=None
     offering_names, offering_ids = get_all_offerings_from_resource(eosc_resource_id=eosc_resource['id'])
     offer = sync_offer(eosc_resource_id=eosc_resource['id'],
                        waldur_offering=waldur_offering)
@@ -443,7 +443,7 @@ def get_waldur_offerings():
 
 
 # TODO: implement this skeleton method
-def test():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
+def process_offerings():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
     # waldur_offerings = get_waldur_offerings(deployment, token)
     waldur_offerings = get_waldur_offerings()
 
@@ -467,4 +467,4 @@ def test():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
             #     update_eosc_offers(eosc_resource, waldur_offering)
 
 
-test()
+process_offerings()
