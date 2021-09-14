@@ -13,16 +13,15 @@ EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 OFFERING_URL = os.environ.get('OFFERING_URL')
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 OFFERING_TOKEN = os.environ.get('OFFERING_TOKEN')
-PROVIDER_TOKEN = os.environ.get('PROVIDER_TOKEN')
 REFRESH_TOKEN = os.environ.get('REFRESH_TOKEN')
 CLIENT_ID = os.environ.get('CLIENT_ID')
 REFRESH_TOKEN_URL = os.environ.get('REFRESH_TOKEN_URL')
+WALDUR_URL = os.environ.get('WALDUR_URL')
+
 RESOURCE_LIST_URL = "/api/v1/resources/"
 RESOURCE_URL = "/api/v1/resources/%s/"
 OFFER_LIST_URL = "/api/v1/resources/%s/offers"
 OFFER_URL = "/api/v1/resources/%s/offers/%s"
-
-WALDUR_URL = os.environ.get('WALDUR_URL')
 WALDUR_API = urllib.parse.urljoin(WALDUR_URL, 'api/')
 
 
