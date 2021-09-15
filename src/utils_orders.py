@@ -15,22 +15,13 @@ logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(li
 EOSC_URL = os.environ.get('EOSC_URL')  # polling url
 TOKEN = os.environ.get('TOKEN')
 OMS_ID = os.environ.get('OMS_ID')
-USERNAME = os.environ.get('USERNAME')
-PASSWORD = os.environ.get('PASSWORD')
 WALDUR_URL = os.environ.get('WALDUR_URL')
 WALDUR_TARGET_ORGANIZATION_NAME = os.environ.get('WALDUR_TARGET_ORGANIZATION_NAME', 'Test4All')
 WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
 
+
 WALDUR_API = urllib.parse.urljoin(WALDUR_URL, 'api/')
 WALDUR_API_AUTH = urllib.parse.urljoin(WALDUR_URL, 'api-auth/password/')
-
-
-# def get_waldur_token(): #
-#     WALDUR_AUTH = {'username': USERNAME, 'password': PASSWORD}
-#     response = requests.post(WALDUR_API_AUTH, data=WALDUR_AUTH)
-#     content = response.json()
-#     logging.info('GET WALDUR TOKEN')
-#     return content['token']
 
 
 waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)

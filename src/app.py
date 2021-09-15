@@ -14,24 +14,11 @@ def sync_orders():
     return "The orders were synced"
 
 
-def sync_offerings():
-    utils_offers.process_offerings()
-    logging.info('process_resources is finished.')
+def sync_offers():
+    utils_offers.process_offers()
+    logging.info('process_offers is finished.')
     return "Offerings have been processed"
 
 
 if __name__ == '__main__':
     sync_orders()
-
-
-# # Time
-# schedule.every(20).seconds.do(sync_projects)
-# schedule.every(30).seconds.do(process_orders)
-#
-#
-# try:
-#     while True:
-#         schedule.run_pending()
-#         time.sleep(30)
-# except KeyboardInterrupt:
-#     print('Interrupted!')

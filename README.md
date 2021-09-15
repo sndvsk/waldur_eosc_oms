@@ -5,9 +5,7 @@
 EOSC_URL - EOSC Marketplace url to poll events from \
 TOKEN - EOSC Marketplace Ordering API token \
 OMS_ID - EOSC Marketplace OMS ID \
-USERNAME - username for localhost Waldur (ansible-waldur-module docker container) \
-PASSWORD - password for localhost Waldur (ansible-waldur-module docker container) \
-WALDUR_URL - ETAIS url / localhost Waldur url (ansible-waldur-module docker container) \
+WALDUR_URL - ETAIS url \
 WALDUR_TARGET_ORGANIZATION_NAME - ETAIS organization \
 WALDUR_TOKEN - ETAIS token
 ### utils_offers.py

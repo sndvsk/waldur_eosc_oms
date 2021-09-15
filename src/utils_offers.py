@@ -163,11 +163,11 @@ def _normalize_limits(limit, limit_type):
     return limit
 
 
-def sync_offer(eosc_resource_id, waldur_offering):
+def sync_offer(eosc_resource_id, waldur_resource):
     # waldur_offering = waldur_offering[0]  # because of list
     eosc_offers = get_offer_list_of_resource(eosc_resource_id)['offers']
     eosc_offers_names = {offer['name'] for offer in eosc_offers}
-    for plan in waldur_offering['plans']:
+    for plan in waldur_resource['plans']:
         if plan['name'] in eosc_offers_names:
             logging.info(f"Skipping creation of plan {plan['name']}. Offer with the same name already exists.")
             continue
@@ -182,7 +182,7 @@ def sync_offer(eosc_resource_id, waldur_offering):
         }]
         # TODO: 2. Add description field - always present, optional
         # TODO 3. input parameters from offering
-        for component in waldur_offering['components']:
+        for component in waldur_resource['components']:
             if component['billing_type'] == 'limit':
                 parameters.append(
                     {
@@ -207,7 +207,7 @@ def sync_offer(eosc_resource_id, waldur_offering):
                         "id": "attributes " + component['type'],
                         "label": component['name'],
                         "description": component['description'] or f"Amount of {component['name']} in "
-                                                                   f"{waldur_offering['name']}.",
+                                                                   f"{waldur_resource['name']}.",
                         "type": "range",
                         "value_type": "integer",  # waldur only expects numeric values for limit-type components
                         "unit": component['measured_unit'],
@@ -228,21 +228,21 @@ def sync_offer(eosc_resource_id, waldur_offering):
         )
 
 
-def create_resource(waldur_offering):
+def create_resource(waldur_resource):
     headers = {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'Authorization': get_provider_token(),
     }
     data = {
-        "name": waldur_offering['name'],
+        "name": waldur_resource['name'],
         "resourceOrganisation": "tnp",  # waldur_offering['customer_name']
         "resourceProviders": [
             "tnp"  # waldur_offering['customer_name']
         ],
         "webpage": "https://example.com",  # waldur_offering['url']
-        "description": waldur_offering['description'] or 'sample text',
-        "tagline": waldur_offering['name'].lower(),
+        "description": waldur_resource['description'] or 'sample text',
+        "tagline": waldur_resource['name'].lower(),
         "logo": "https://example.com",
         "multimedia": [
         ],
@@ -371,7 +371,7 @@ def get_resource_by_id(resource_id):
     return data
 
 
-def get_all_resources_from_customer():
+def get_all_resources_from_provider():
     headers = {
         'Accept': 'application/json'
     }
@@ -382,7 +382,7 @@ def get_all_resources_from_customer():
     return resource_names, resource_ids
 
 
-def get_all_offerings_from_resource(eosc_resource_id):
+def get_all_offers_from_resource(eosc_resource_id):
     headers = {
         'accept': 'application/json',
         'X-User-Token': OFFERING_TOKEN,
@@ -390,13 +390,13 @@ def get_all_offerings_from_resource(eosc_resource_id):
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers)
     data = json.loads(response.text)
     data = data['offers']
-    offering_names = [d['name'] for d in data]
-    offering_ids = [d['id'] for d in data]
-    return offering_names, offering_ids
+    offers_names = [d['name'] for d in data]
+    offers_ids = [d['id'] for d in data]
+    return offers_names, offers_ids
 
 
 def get_or_create_eosc_resource(waldur_offering):  # , eosc_provider_portal=None
-    resource_names, resource_ids = get_all_resources_from_customer()
+    resource_names, resource_ids = get_all_resources_from_provider()
     if waldur_offering['name'] in resource_names:
         existing_resource = get_resource_by_id(resource_ids[resource_names.index(waldur_offering['name'])])
         logging.info(f'Resource is already in EOSC: {existing_resource["name"]}')
@@ -408,11 +408,11 @@ def get_or_create_eosc_resource(waldur_offering):  # , eosc_provider_portal=None
         return resource, True
 
 
-def get_or_create_eosc_resource_offer(eosc_resource, waldur_offering):  # , eosc_marketplace=None
-    offering_names, offering_ids = get_all_offerings_from_resource(eosc_resource_id=eosc_resource['id'])
+def get_or_create_eosc_resource_offer(eosc_resource, waldur_resource):  # , eosc_marketplace=None
+    offers_names, offers_ids = get_all_offers_from_resource(eosc_resource_id=eosc_resource['id'])
     offer = sync_offer(eosc_resource_id=eosc_resource['id'],
-                       waldur_offering=waldur_offering)
-    if waldur_offering['name'] in offering_names:
+                       waldur_resource=waldur_resource)
+    if waldur_resource['name'] in offers_names:
         return offer, True
     else:
         return offer, False
@@ -436,35 +436,35 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         return provider, False
 
 
-def get_waldur_offerings():
-    list_offerings = get_waldur_client().list_marketplace_offerings(
+def get_waldur_resources():
+    list_resources = get_waldur_client().list_marketplace_offerings(
         {'customer_uuid': '1fb1f539aa6a4b38a33a5f121f4ac5b8'})
-    return list_offerings
+    return list_resources
 
 
-# TODO: implement this skeleton method
-def process_offerings():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
-    # waldur_offerings = get_waldur_offerings(deployment, token)
-    waldur_offerings = get_waldur_offerings()
+# TODO finish this method
+def process_offers():  # eosc_provider_portal=None, eosc_marketplace=None, deployment=None
+    # waldur_resources = get_waldur_resources(deployment, token)
+    waldur_resources = get_waldur_resources()
 
-    for waldur_offering in waldur_offerings:
-        provider, created = get_or_create_eosc_provider(waldur_offering['customer'])  # , eosc_provider_portal
+    for waldur_resource in waldur_resources:
+        provider, created = get_or_create_eosc_provider(waldur_resource['customer'])  # , eosc_provider_portal
         if created:
             logging.info(f'Provider has been created, pending approval')
         if provider['is_approved']:
-            eosc_resource, resource_created = get_or_create_eosc_resource(waldur_offering)  # , eosc_provider_portal
-            if resource_created:
+            eosc_resource, eosc_resource_created = get_or_create_eosc_resource(waldur_resource)  # eosc_provider_portal
+            if eosc_resource_created:
                 logging.info('New resource has been created in EOSC', eosc_resource)
             eosc_resource_offers, offer_created = get_or_create_eosc_resource_offer(
                 eosc_resource,
-                waldur_offering)  # , eosc_marketplace
+                waldur_resource)  # , eosc_marketplace
             if offer_created:
                 logging.info('New offering has been created in EOSC', eosc_resource)
 
-            # if not resource_created and not is_resource_up_to_date(eosc_resource, waldur_offering):
-            #     update_eosc_resource(eosc_resource, waldur_offering)
-            # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_offering):
-            #     update_eosc_offers(eosc_resource, waldur_offering)
+            # if not eosc_resource_created and not is_resource_up_to_date(eosc_resource, waldur_resource):
+            #     update_eosc_resource(eosc_resource, waldur_resource)
+            # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):
+            #     update_eosc_offers(eosc_resource, waldur_resource)
 
 
-process_offerings()
+process_offers()
