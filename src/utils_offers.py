@@ -39,8 +39,8 @@ def get_provider_token():
     }
 
     response = requests.post(REFRESH_TOKEN_URL, data=data)
-    token = json.loads(response.text)
-    token = token['access_token']
+    response_data = response.json()
+    token = response_data['access_token']
     return token
 
 
@@ -83,7 +83,7 @@ def get_resource_list():
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_LIST_URL),
                             headers=headers)
-    resource_list_data = json.loads(response.text)
+    resource_list_data = response.json()
     return resource_list_data
 
 
@@ -91,7 +91,7 @@ def get_resource(resource_id):
     headers = resource_and_offering_request()
     response = requests.get(urllib.parse.urljoin(EOSC_URL, RESOURCE_URL % (str(resource_id))),
                             headers=headers)
-    resource_data = json.loads(response.text)
+    resource_data = response.json()
     return resource_data
 
 
@@ -130,7 +130,7 @@ def create_offer_for_resource(eosc_resource_id: str, offer_name: str, offer_desc
     if response.status_code != 201:
         logging.error('Failed to create an offer.', response.status_code, response.text)
     else:
-        offer_data = json.loads(response.text)
+        offer_data = response.json()
         logging.info(f'Successfully created offer {offer_name} for {eosc_resource_id}.')
         return offer_data
 
@@ -142,7 +142,7 @@ def patch_offer_from_resource(resource_id, offer_id, waldur_offering_data, offer
     response = requests.patch(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                               headers=headers,
                               data=data)
-    patch_offer_data = json.loads(response.text)
+    patch_offer_data = response.json()
     return patch_offer_data
 
 
@@ -150,7 +150,7 @@ def delete_offer_from_resource(resource_id, offer_id):
     headers = offering_request_delete()
     response = requests.delete(urllib.parse.urljoin(EOSC_URL, OFFER_URL % (str(resource_id), str(offer_id))),
                                headers=headers)
-    delete_offer_data = json.loads(response.text)
+    delete_offer_data = response.json()
     return delete_offer_data
 
 
@@ -164,7 +164,6 @@ def _normalize_limits(limit, limit_type):
 
 
 def sync_offer(eosc_resource_id, waldur_resource):
-    # waldur_offering = waldur_offering[0]  # because of list
     eosc_offers = get_offer_list_of_resource(eosc_resource_id)['offers']
     eosc_offers_names = {offer['name'] for offer in eosc_offers}
     for plan in waldur_resource['plans']:
@@ -335,11 +334,10 @@ def create_resource(waldur_resource):
         "paymentModel": None,
         "pricing": None
     }
-    data = json.dumps(data)
-    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=data)
+    response = requests.post(urllib.parse.urljoin(OFFERING_URL, 'resource/'), headers=headers, data=json.dumps(data))
     if response.status_code == 409:
         logging.error(f'Error: {response.text}')
-    r = json.loads(response.text)
+    r = response.json()
     return r, response.status_code
 
 
@@ -367,7 +365,7 @@ def get_resource_by_id(resource_id):
         'Accept': 'application/json'
     }
     response = requests.get(urllib.parse.urljoin(OFFERING_URL, f'resource/{resource_id}'), headers=headers)
-    data = json.loads(response.text)
+    data = response.json()
     return data
 
 
@@ -376,9 +374,9 @@ def get_all_resources_from_provider():
         'Accept': 'application/json'
     }
     response = requests.get(urllib.parse.urljoin(OFFERING_URL, 'provider/services/tnp'), headers=headers)
-    data = json.loads(response.text)
-    resource_names = [d['name'] for d in data]
-    resource_ids = [d['id'] for d in data]
+    data = response.json()
+    resource_names = [item['name'] for item in data]
+    resource_ids = [item['id'] for item in data]
     return resource_names, resource_ids
 
 
@@ -388,10 +386,10 @@ def get_all_offers_from_resource(eosc_resource_id):
         'X-User-Token': OFFERING_TOKEN,
     }
     response = requests.get(urllib.parse.urljoin(EOSC_URL, OFFER_LIST_URL % (str(eosc_resource_id))), headers=headers)
-    data = json.loads(response.text)
+    data = response.json()
     data = data['offers']
-    offers_names = [d['name'] for d in data]
-    offers_ids = [d['id'] for d in data]
+    offers_names = [item['name'] for item in data]
+    offers_ids = [item['id'] for item in data]
     return offers_names, offers_ids
 
 
@@ -427,7 +425,7 @@ def get_or_create_eosc_provider(customer=None):  # only get atm
         }
         # tnp -
         response = requests.get(urllib.parse.urljoin(OFFERING_URL, 'provider/tnp/'), headers=headers)
-        provider = json.loads(response.text)
+        provider = response.json()
     except ValueError:
         return provider, False
     else:
