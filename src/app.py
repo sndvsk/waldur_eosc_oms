@@ -1,6 +1,6 @@
 import logging
 import utils_orders as utils_orders
-import utils_offers as utils_offers
+# import utils_offers as utils_offers
 
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -14,10 +14,10 @@ def sync_orders():
     return "The orders were synced"
 
 
-def sync_offers():
-    utils_offers.process_offers()
-    logging.info('process_offers is finished.')
-    return "Offerings have been processed"
+# def sync_offers():
+#     utils_offers.process_offers()
+#     logging.info('process_offers is finished.')
+#     return "Offerings have been processed"
 
 
 if __name__ == '__main__':
