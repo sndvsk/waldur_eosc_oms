@@ -1,21 +1,8 @@
-import os
 import unittest
 from unittest.mock import Mock
-
 import waldur_client
-from oms_jira import MPClient
 from oms_jira.services.mp import ProjectOwner, ProjectAttributes, MPProject
 from src.utils_orders import get_or_create_project
-
-EOSC_URL = os.environ.get('EOSC_URL')  # polling url
-TOKEN = os.environ.get('TOKEN')
-OMS_ID = os.environ.get('OMS_ID')
-WALDUR_URL = os.environ.get('WALDUR_URL')
-WALDUR_TOKEN = os.environ.get('WALDUR_TOKEN')
-WALDUR_TARGET_ORGANIZATION_NAME = os.environ.get('WALDUR_TARGET_ORGANIZATION_NAME', 'Test4All')
-
-mp = MPClient(endpoint_url=EOSC_URL, oms_id=OMS_ID, auth_token=TOKEN)
-# waldur_client = WaldurClient(WALDUR_API, WALDUR_TOKEN)
 
 
 class MyTestCase(unittest.TestCase):
