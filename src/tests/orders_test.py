@@ -235,7 +235,67 @@ class TestOrders(unittest.TestCase):
     def test_create_order(self):
         mock_create_marketplace_order = Mock()
         waldur_client.WaldurClient.create_marketplace_order = mock_create_marketplace_order
-        mock_create_marketplace_order.return_value = {}
+        mock_create_marketplace_order.return_value = {
+            "url": "order_url",
+            "uuid": "order_uuid",
+            "created": "2021-10-13T13:58:51.471159Z",
+            "created_by": "created_by_user",
+            "created_by_username": "user@ut.ee",
+            "created_by_full_name": "TestUser",
+            "approved_by": "approved_by_user",
+            "approved_at": "2021-10-13T13:58:51.548927Z",
+            "approved_by_username": "user@ut.ee",
+            "approved_by_full_name": "TestUser",
+            "project": "project_url",
+            "project_uuid": "project_uuid",
+            "project_name": "TEST",
+            "project_description": "",
+            "customer_name": "customer_name",
+            "customer_uuid": "customer_uuid",
+            "state": "done",
+            "items": [
+                {
+                    "offering": "offering_url",
+                    "offering_name": "offering_name",
+                    "offering_uuid": "offering_uuid",
+                    "offering_description": "",
+                    "offering_thumbnail": "offering_thumbnail_url",
+                    "offering_type": "SlurmInvoices.SlurmPackage",
+                    "offering_terms_of_service": "",
+                    "offering_shared": True,
+                    "offering_billable": True,
+                    "provider_name": "ETAIS",
+                    "provider_uuid": "provider_uuid",
+                    "category_title": "title",
+                    "category_uuid": "category_uuid",
+                    "plan": "plan_url",
+                    "plan_unit": "day",
+                    "plan_name": "plan_name",
+                    "plan_uuid": "plan_uuid",
+                    "plan_description": "",
+                    "attributes": {
+                        "name": "test_test"
+                    },
+                    "limits": {},
+                    "uuid": "item_uuid",
+                    "created": "2021-10-13T13:58:51.498607Z",
+                    "modified": "2021-10-13T13:59:09.704655Z",
+                    "type": "Create",
+                    "resource_uuid": "resource_uuid",
+                    "resource_type": "SLURM.Allocation",
+                    "resource_name": "test_test",
+                    "cost": "0.0000000000",
+                    "state": "done",
+                    "output": "",
+                    "marketplace_resource_uuid": "marketplace_resource_uuid",
+                    "error_message": ""
+                }
+            ],
+            "total_cost": "0.0000000000",
+            "file": "file_url",
+            "type": "Create",
+            "error_message": "error_uuid: "
+        }
 
         mock_post_message = Mock()
         MPClient.post = mock_post_message
@@ -380,7 +440,7 @@ class TestOrders(unittest.TestCase):
                               waldur_project_data_for_order=waldur_project_data,
                               eosc_project_item_data=eosc_project_item_data)
 
-        # self.assertEqual(mock_create_marketplace_order.return_value, result)
+        self.assertEqual(mock_create_marketplace_order.return_value, result)
 
         mock_create_marketplace_order.assert_called_once()
 
