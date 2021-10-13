@@ -9,7 +9,7 @@ from src import utils_orders
 from src.utils_orders import get_or_create_project, create_order, process_orders, get_events, get_new_events
 
 
-class MyTestCase(unittest.TestCase):
+class TestOrders(unittest.TestCase):
     # without create_project()
     def test_get_or_create_project_first(self):
         mock_list_projects = Mock()
