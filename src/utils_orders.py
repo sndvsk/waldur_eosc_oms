@@ -173,12 +173,12 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
                     attributes[property_id] = offer_property["value"]
 
     try:
-        order_data = waldur_client.create_marketplace_order(project=waldur_project_data_for_order['uuid'],
-                                                            offering=waldur_offering_data['uuid'],
-                                                            plan=plan['uuid'],
-                                                            attributes=attributes,
-                                                            limits=limits
-                                                            )
+        waldur_client.create_marketplace_order(project=waldur_project_data_for_order['uuid'],
+                                               offering=waldur_offering_data['uuid'],
+                                               plan=plan['uuid'],
+                                               attributes=attributes,
+                                               limits=limits
+                                               )
     except ValueError:
         logging.error(f'There is no {plan["name"]} in ETAIS.')
     else:
@@ -190,7 +190,6 @@ def create_order(waldur_offering_data, waldur_project_data_for_order, eosc_proje
                  content=content)
 
     # patch_project_item(project_item_data=eosc_project_item_data)
-    return order_data
 
 
 def get_or_create_project(eosc_project_data, waldur_organization_data):
