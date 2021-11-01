@@ -463,6 +463,3 @@ def process_offers():  # eosc_provider_portal=None, eosc_marketplace=None, deplo
             #     update_eosc_resource(eosc_resource, waldur_resource)
             # if not offer_created and not are_offers_up_to_date(eosc_resource_offers, waldur_resource):
             #     update_eosc_offers(eosc_resource, waldur_resource)
-
-
-process_offers()

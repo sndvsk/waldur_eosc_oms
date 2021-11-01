@@ -1,5 +1,5 @@
 import logging
-import utils_orders
+import utils_offers
 
 
 logging.getLogger("requests").setLevel(logging.WARNING)
@@ -7,11 +7,11 @@ logging.basicConfig(level=logging.INFO, format=f'[%(asctime)s] %(filename)s:%(li
                                                f'%(message)s')
 
 
-def sync_orders():
-    utils_orders.process_orders()
-    logging.info('process_orders is finished.')
-    return "The orders were synced"
+def sync_offers():
+    utils_offers.process_offers()
+    logging.info('process_offers is finished.')
+    return "The offers were synced"
 
 
 if __name__ == '__main__':
-    sync_orders()
+    sync_offers()
